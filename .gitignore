@@ -73,3 +73,55 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# iOS specific
+ios/build/
+ios/Podfile.lock
+*.mobileprovision
+*.cert
+*.p12
+*.cer
+
+# Android specific
+android/app/release/
+android/app/debug/
+android/*.aab
+*.apk
+output.json
+
+# Cache files
+.eslintcache
+.prettierrc.cache
+.babel.cache
+
+# Logs
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# React Native
+.expo/
+dist/
+web-build/
+
+# System files
+*.swp
+*.swo
+*~
