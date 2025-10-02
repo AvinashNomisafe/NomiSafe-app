@@ -1,45 +1,60 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import 'react-native-gesture-handler';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { View, Text } from 'react-native';
+import PhoneLoginScreen from './src/screens/PhoneLoginScreen';
+import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
+import { RootStackParamList } from './src/types/navigation';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+// Mock Home Screen
+const HomeScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text style={{ fontSize: 24 }}>Welcome to NomiSafe!</Text>
+    <Text style={{ marginTop: 10, color: '#666' }}>
+      Authentication Successful
+    </Text>
+  </View>
+);
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="PhoneLogin"
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#007AFF',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }}
+      >
+        <Stack.Screen
+          name="PhoneLogin"
+          component={PhoneLoginScreen}
+          options={{ title: 'Login' }}
+        />
+        <Stack.Screen
+          name="OTPVerification"
+          component={OTPVerificationScreen}
+          options={{ title: 'Verify OTP' }}
+        />
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            title: 'Home',
+            headerLeft: () => null, // Disable back button
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 export default App;
