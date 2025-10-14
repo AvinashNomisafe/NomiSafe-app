@@ -51,17 +51,26 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
 
     try {
       setIsLoading(true);
-      const isVerified = await authService.verifyOTP(phoneNumber, otp);
+      const response = await authService.verifyOTP(phoneNumber, otp);
 
-      if (isVerified) {
-        Alert.alert('Success', 'OTP verified successfully', [
-          { text: 'OK', onPress: () => navigation.replace('Home') },
-        ]);
-      } else {
-        Alert.alert('Error', 'Invalid OTP. Please try again.');
-      }
+      // Store tokens in secure storage (you should implement this)
+      // await AsyncStorage.setItem('accessToken', response.access);
+      // await AsyncStorage.setItem('refreshToken', response.refresh);
+
+      const message = response.created
+        ? 'Account created and verified successfully!'
+        : 'Logged in successfully!';
+
+      Alert.alert('Success', message, [
+        { text: 'OK', onPress: () => navigation.replace('Home') },
+      ]);
     } catch (err) {
-      Alert.alert('Error', 'Failed to verify OTP. Please try again.');
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Failed to verify OTP. Please try again.';
+      Alert.alert('Error', errorMessage);
+      console.error('OTP Verification Error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -72,17 +81,17 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
 
     try {
       setIsLoading(true);
-      const success = await authService.sendOTP(phoneNumber);
-
-      if (success) {
-        setTimer(30);
-        setCanResend(false);
-        Alert.alert('Success', 'OTP resent successfully');
-      } else {
-        Alert.alert('Error', 'Failed to resend OTP. Please try again.');
-      }
+      await authService.sendOTP(phoneNumber);
+      setTimer(30);
+      setCanResend(false);
+      Alert.alert('Success', 'OTP resent successfully');
     } catch (err) {
-      Alert.alert('Error', 'Failed to resend OTP. Please try again.');
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Failed to resend OTP. Please try again.';
+      Alert.alert('Error', errorMessage);
+      console.error('OTP Resend Error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +101,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Verify OTP</Text>
       <Text style={styles.subtitle}>
-        Enter the verification code sent to +91 {phoneNumber}
+        Enter the verification code sent to {phoneNumber}
       </Text>
 
       <TextInput

@@ -41,17 +41,24 @@ const PhoneLoginScreen: React.FC<PhoneLoginScreenProps> = ({ navigation }) => {
       }
 
       setIsLoading(true);
-      const success = await authService.sendOTP(cleanPhoneNumber);
+      // Format phone number with country code
+      const formattedPhone = `+91${cleanPhoneNumber}`;
+      const success = await authService.sendOTP(formattedPhone);
 
       if (success) {
         navigation.navigate('OTPVerification', {
-          phoneNumber: cleanPhoneNumber,
+          phoneNumber: formattedPhone,
         });
       } else {
         Alert.alert('Error', 'Failed to send OTP. Please try again.');
       }
     } catch (err) {
-      Alert.alert('Error', 'Failed to send OTP. Please try again.');
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Failed to send OTP. Please try again.';
+      Alert.alert('Error', errorMessage);
+      console.error('OTP Request Error:', err);
     } finally {
       setIsLoading(false);
     }

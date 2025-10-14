@@ -1,0 +1,12 @@
+# list available AVDs
+emulator -list-avds
+
+1# start an AVD (replace NAME with one from the list)
+emulator -avd Pixel_9_API_35 &
+
+2# Starts metro 
+npx react-native start
+
+3# in a new terminal (from project root)
+npx react-native run-android
+
