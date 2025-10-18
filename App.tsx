@@ -7,15 +7,14 @@ import PhoneLoginScreen from './src/screens/PhoneLoginScreen';
 import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
 import { RootStackParamList } from './src/types/navigation';
 
-// Mock Home Screen
-const HomeScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text style={{ fontSize: 24 }}>Welcome to NomiSafe!</Text>
-    <Text style={{ marginTop: 10, color: '#666' }}>
-      Authentication Successful
-    </Text>
-  </View>
-);
+import HomeScreen from './src/screens/HomeScreen';
+import ServiceScreen from './src/screens/ServiceScreen';
+import SafeVaultScreen from './src/screens/SafeVaultScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import MyPolicyScreen from './src/screens/MyPolicyScreen';
+import InsuranceScreen from './src/screens/InsuranceScreen';
+import PropertiesScreen from './src/screens/PropertiesScreen';
+import TutorialsScreen from './src/screens/TutorialsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -26,7 +25,7 @@ function App() {
         initialRouteName="PhoneLogin"
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#007AFF',
+            backgroundColor: '#4DB6AC',
           },
           headerTintColor: '#fff',
           headerTitleStyle: {
@@ -47,10 +46,66 @@ function App() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MyPolicy"
+          component={MyPolicyScreen}
           options={{
-            title: 'Home',
-            headerLeft: () => null, // Disable back button
+            title: 'My Policy',
+            headerStyle: {
+              backgroundColor: '#4DB6AC',
+            },
+            headerTintColor: '#fff',
           }}
+        />
+        <Stack.Screen
+          name="Insurance"
+          component={InsuranceScreen}
+          options={{
+            title: 'Insurance',
+            headerStyle: {
+              backgroundColor: '#4DB6AC',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+        <Stack.Screen
+          name="Properties"
+          component={PropertiesScreen}
+          options={{
+            title: 'Properties',
+            headerStyle: {
+              backgroundColor: '#4DB6AC',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+        <Stack.Screen
+          name="Tutorials"
+          component={TutorialsScreen}
+          options={{
+            title: 'Tutorials',
+            headerStyle: {
+              backgroundColor: '#4DB6AC',
+            },
+            headerTintColor: '#fff',
+          }}
+        />
+        <Stack.Screen
+          name="Service"
+          component={ServiceScreen}
+          options={{ title: 'Service' }}
+        />
+        <Stack.Screen
+          name="SafeVault"
+          component={SafeVaultScreen}
+          options={{ title: 'Safe Vault' }}
+        />
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ title: 'Profile' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
