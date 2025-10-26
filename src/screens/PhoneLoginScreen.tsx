@@ -7,7 +7,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
+  Image,
+  ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as authService from '../services/auth';
 
@@ -65,79 +69,143 @@ const PhoneLoginScreen: React.FC<PhoneLoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Enter your phone number</Text>
-      <TextInput
-        style={[styles.input, error ? styles.inputError : null]}
-        placeholder="Enter your phone number"
-        keyboardType="phone-pad"
-        value={phoneNumber}
-        onChangeText={text => {
-          setError('');
-          setPhoneNumber(text);
-        }}
-        maxLength={10}
-        editable={!isLoading}
-      />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Top logo */}
+        <View style={styles.logoWrap}>
+          {/* Replace with real logo image if available */}
+          <Text style={styles.logoText}>NOMISAFE</Text>
+        </View>
 
-      <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleContinue}
-        disabled={isLoading || !phoneNumber}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#ffffff" />
-        ) : (
-          <Text style={styles.buttonText}>Continue</Text>
-        )}
-      </TouchableOpacity>
-    </View>
+        {/* Illustration */}
+        <View style={styles.illustration}>
+          <Text style={styles.illustrationIcon}>🔒</Text>
+        </View>
+
+        <Text style={styles.title}>Enter Mobile Number For LogIn</Text>
+        <Text style={styles.subtitle}>
+          We will send an One Time Password on this number
+        </Text>
+
+        <View style={styles.inputRow}>
+          <View style={styles.countryCode}>
+            <Text style={styles.countryText}>+91</Text>
+          </View>
+          <TextInput
+            style={[styles.input, error ? styles.inputError : null]}
+            placeholder="Enter mobile number"
+            keyboardType="phone-pad"
+            value={phoneNumber}
+            onChangeText={text => {
+              setError('');
+              setPhoneNumber(text.replace(/[^0-9]/g, ''));
+            }}
+            maxLength={10}
+            editable={!isLoading}
+          />
+        </View>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.buttonDisabled]}
+          onPress={handleContinue}
+          disabled={isLoading || phoneNumber.length < 10}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.buttonText}>GET OTP</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.link} onPress={() => {}}>
+          <Text style={styles.linkText}>Login with Email ID ? Click here</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.link} onPress={() => {}}>
+          <Text style={styles.linkText}>Don't have an account? Sign up</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.footer}>Copyright © NOMISAFE 2025.</Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: '#ffffff' },
   container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    padding: 24,
+    paddingTop: 16,
+  },
+  logoWrap: {
+    marginTop: 8,
+    marginBottom: 18,
+  },
+  logoText: {
+    color: '#0B7D76',
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
+  illustration: {
+    width: 220,
+    height: 220,
+    borderRadius: 12,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E8F6F5',
+    marginBottom: 24,
   },
+  illustrationIcon: { fontSize: 72 },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  input: {
+  subtitle: { textAlign: 'center', color: '#666', marginBottom: 16 },
+  inputRow: {
+    flexDirection: 'row',
+    width: '100%',
+    marginBottom: 8,
+  },
+  countryCode: {
+    width: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
-    padding: 15,
     borderRadius: 8,
-    marginBottom: 8,
+    marginRight: 8,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+  },
+  countryText: { fontSize: 16 },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     fontSize: 16,
   },
-  inputError: {
-    borderColor: '#ff0000',
-  },
-  errorText: {
-    color: '#ff0000',
-    marginBottom: 16,
-    fontSize: 14,
-  },
+  inputError: { borderColor: '#ff4d4f' },
+  errorText: { color: '#ff4d4f', alignSelf: 'flex-start', marginTop: 4 },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
+    width: '100%',
+    backgroundColor: '#4DB6AC',
+    paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 12,
   },
-  buttonDisabled: {
-    backgroundColor: '#cccccc',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  buttonDisabled: { backgroundColor: '#A5D1CB' },
+  buttonText: { color: '#fff', fontWeight: '700' },
+  link: { marginTop: 12 },
+  linkText: { color: '#007AFF' },
+  footer: { marginTop: 28, color: '#888' },
 });
 
 export default PhoneLoginScreen;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -25,21 +27,22 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
 
+  // refs for 6 inputs
+  const inputs = useRef<Array<TextInput | null>>([]);
+
   useEffect(() => {
     let intervalId: number | null = null;
 
     if (timer > 0) {
       intervalId = setInterval(() => {
         setTimer((prev: number) => prev - 1);
-      }, 1000);
+      }, 1000) as unknown as number;
     } else {
       setCanResend(true);
     }
 
     return () => {
-      if (intervalId !== null) {
-        clearInterval(intervalId);
-      }
+      if (intervalId !== null) clearInterval(intervalId as unknown as number);
     };
   }, [timer]);
 
@@ -52,10 +55,6 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       setIsLoading(true);
       const response = await authService.verifyOTP(phoneNumber, otp);
-
-      // Store tokens in secure storage (you should implement this)
-      // await AsyncStorage.setItem('accessToken', response.access);
-      // await AsyncStorage.setItem('refreshToken', response.refresh);
 
       const message = response.created
         ? 'Account created and verified successfully!'
@@ -97,99 +96,150 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
+  const onChangeDigit = (index: number, value: string) => {
+    if (!/^[0-9]?$/.test(value)) return;
+    const digits = otp.split('');
+    digits[index] = value;
+    const newOtp = digits.join('').slice(0, 6);
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      inputs.current[index + 1]?.focus();
+    }
+  };
+
+  const onKeyPress = (index: number, e: any) => {
+    if (e.nativeEvent.key === 'Backspace') {
+      if (index > 0) inputs.current[index - 1]?.focus();
+    }
+  };
+
+  const digits = otp.padEnd(6, ' ').split('').slice(0, 6);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Verify OTP</Text>
-      <Text style={styles.subtitle}>
-        Enter the verification code sent to {phoneNumber}
-      </Text>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.logoWrap}>
+          <Text style={styles.logoText}>NOMISAFE</Text>
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter 6-digit OTP"
-        keyboardType="number-pad"
-        maxLength={6}
-        value={otp}
-        onChangeText={setOtp}
-        editable={!isLoading}
-      />
+        <View style={styles.illustration}>
+          <Text style={styles.illustrationIcon}>🔒</Text>
+        </View>
 
-      <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleVerify}
-        disabled={isLoading || otp.length !== 6}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#ffffff" />
-        ) : (
-          <Text style={styles.buttonText}>Verify</Text>
-        )}
-      </TouchableOpacity>
+        <Text style={styles.title}>OTP Verification</Text>
+        <Text style={styles.subtitle}>Enter The OTP Sent To {phoneNumber}</Text>
 
-      <View style={styles.resendContainer}>
-        {canResend ? (
-          <TouchableOpacity onPress={handleResendOTP} disabled={isLoading}>
-            <Text style={styles.resendText}>Resend OTP</Text>
-          </TouchableOpacity>
-        ) : (
-          <Text style={styles.timerText}>Resend OTP in {timer}s</Text>
-        )}
-      </View>
-    </View>
+        <View style={styles.otpRow}>
+          {digits.map((d, i) => (
+            <TextInput
+              key={i}
+              ref={ref => {
+                inputs.current[i] = ref;
+              }}
+              style={styles.otpBox}
+              keyboardType="number-pad"
+              maxLength={1}
+              value={d.trim()}
+              onChangeText={val => onChangeDigit(i, val)}
+              onKeyPress={e => onKeyPress(i, e)}
+            />
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.buttonDisabled]}
+          onPress={handleVerify}
+          disabled={isLoading || otp.trim().length !== 6}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.buttonText}>VERIFY & LOGIN</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.resendContainer}>
+          {canResend ? (
+            <TouchableOpacity onPress={handleResendOTP} disabled={isLoading}>
+              <Text style={styles.resendText}>Resend OTP</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.timerText}>Resend OTP in {timer}s</Text>
+          )}
+        </View>
+
+        <TouchableOpacity style={styles.link} onPress={() => {}}>
+          <Text style={styles.linkText}>Login with Email ID ? Click here</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.link} onPress={() => {}}>
+          <Text style={styles.linkText}>Don't have an account? Sign up</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.footer}>Copyright © NOMISAFE 2025.</Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: '#ffffff' },
   container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    padding: 24,
+    paddingTop: 16,
+  },
+  logoWrap: { marginTop: 8, marginBottom: 18 },
+  logoText: { color: '#0B7D76', fontWeight: '700', letterSpacing: 2 },
+  illustration: {
+    width: 220,
+    height: 220,
+    borderRadius: 12,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E8F6F5',
+    marginBottom: 24,
   },
+  illustrationIcon: { fontSize: 72 },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
+  subtitle: { textAlign: 'center', color: '#666', marginBottom: 16 },
+  otpRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
     marginBottom: 20,
   },
-  input: {
+  otpBox: {
+    width: 50,
+    height: 50,
     borderWidth: 1,
     borderColor: '#ddd',
-    padding: 15,
     borderRadius: 8,
-    marginBottom: 20,
-    fontSize: 16,
+    textAlign: 'center',
+    fontSize: 24,
   },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
+    width: '100%',
+    backgroundColor: '#4DB6AC',
+    paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 12,
   },
-  buttonDisabled: {
-    backgroundColor: '#cccccc',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  resendContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  resendText: {
-    color: '#007AFF',
-    fontSize: 16,
-  },
-  timerText: {
-    color: '#666',
-    fontSize: 16,
-  },
+  buttonDisabled: { backgroundColor: '#A5D1CB' },
+  buttonText: { color: '#fff', fontWeight: '700' },
+  resendContainer: { marginTop: 12, alignItems: 'center' },
+  resendText: { color: '#4DB6AC', fontSize: 16 },
+  timerText: { color: '#666', fontSize: 16 },
+  link: { marginTop: 12 },
+  linkText: { color: '#007AFF' },
+  footer: { marginTop: 28, color: '#888' },
 });
 
 export default OTPVerificationScreen;

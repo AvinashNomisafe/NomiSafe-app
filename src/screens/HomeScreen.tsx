@@ -46,19 +46,8 @@ const HomeScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text style={styles.backButton}>←</Text>
-      </TouchableOpacity>
       <View style={styles.logoContainer}>
         <Text style={styles.logoText}>NOMISAFE</Text>
-      </View>
-      <View style={styles.headerIcons}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Text>🌐</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton}>
-          <Text>🔔</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -123,7 +112,7 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {renderHeader()}
+      {/* {renderHeader()} */}
       <ScrollView style={styles.scrollView}>
         {renderSearchBar()}
         {renderTabButtons()}
