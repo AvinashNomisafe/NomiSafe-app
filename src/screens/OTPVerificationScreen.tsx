@@ -60,15 +60,35 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
         ? 'Account created and verified successfully!'
         : 'Logged in successfully!';
 
-      Alert.alert('Success', message, [
-        { text: 'OK', onPress: () => navigation.replace('Home') },
-      ]);
+      // Clear the OTP input before navigating
+      setOtp('');
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
     } catch (err) {
       const errorMessage =
         err instanceof Error
           ? err.message
           : 'Failed to verify OTP. Please try again.';
-      Alert.alert('Error', errorMessage);
+
+      // Clear the OTP input on error
+      setOtp('');
+
+      Alert.alert('Error', errorMessage, [
+        {
+          text: 'Try Again',
+          onPress: () => {
+            // Focus the first input
+            inputs.current[0]?.focus();
+          },
+        },
+        {
+          text: 'Resend OTP',
+          onPress: handleResendOTP,
+        },
+      ]);
       console.error('OTP Verification Error:', err);
     } finally {
       setIsLoading(false);
