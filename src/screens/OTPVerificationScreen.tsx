@@ -14,6 +14,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import * as authService from '../services/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'OTPVerification'>;
@@ -56,17 +57,23 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       setIsLoading(true);
       const response = await authService.verifyOTP(phoneNumber, otp);
 
+      // Get the auth context
+      const { login } = useAuth();
+
+      // Store the auth data in context
+      await login({
+        accessToken: response.access,
+        refreshToken: response.refresh,
+        userId: response.id,
+        phoneNumber: response.phone_number,
+      });
+
       const message = response.created
         ? 'Account created and verified successfully!'
         : 'Logged in successfully!';
 
       // Clear the OTP input before navigating
       setOtp('');
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
     } catch (err) {
       const errorMessage =
         err instanceof Error

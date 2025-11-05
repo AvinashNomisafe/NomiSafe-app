@@ -3,7 +3,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import PhoneLoginScreen from './src/screens/PhoneLoginScreen';
 import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
 import { RootStackParamList } from './src/types/navigation';
@@ -20,23 +21,32 @@ import AppHeader from './src/components/AppHeader';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-function App() {
+const Navigation = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#4DB6AC" />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaProvider>
-      <AppHeader />
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="PhoneLogin"
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: '#4DB6AC',
-            },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-          }}
-        >
+    <Stack.Navigator
+      initialRouteName={isAuthenticated ? "Home" : "PhoneLogin"}
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#4DB6AC',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}>
+      {!isAuthenticated ? (
+        // Auth screens
+        <>
           <Stack.Screen
             name="PhoneLogin"
             component={PhoneLoginScreen}
@@ -47,6 +57,10 @@ function App() {
             component={OTPVerificationScreen}
             options={{ headerShown: false }}
           />
+        </>
+      ) : (
+        // App screens
+        <>
           <Stack.Screen
             name="Home"
             component={HomeScreen}
@@ -105,9 +119,22 @@ function App() {
             component={ProfileScreen}
             options={{ title: 'Profile' }}
           />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+        </>
+      )}
+    </Stack.Navigator>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <SafeAreaProvider>
+        <AppHeader />
+        <NavigationContainer>
+          <Navigation />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }
 
