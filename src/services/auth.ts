@@ -19,6 +19,17 @@ export const authApi = axios.create({
   timeout: 10000, // 10 second timeout
 });
 
+// Public API instance: used for endpoints that must be called without
+// sending Authorization header (eg. OTP request/verify). This avoids
+// causing authentication errors if the client has an expired/malformed token.
+export const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+});
+
 // Add a request interceptor to include the access token
 authApi.interceptors.request.use(async config => {
   try {
@@ -46,7 +57,7 @@ export const createAuthenticatedApi = (accessToken: string) => {
 
 export const sendOTP = async (phoneNumber: string): Promise<boolean> => {
   try {
-    const response = await authApi.post<OTPRequestResponse>(
+    const response = await publicApi.post<OTPRequestResponse>(
       '/auth/otp/request/',
       {
         phone_number: phoneNumber,
@@ -69,7 +80,7 @@ export const verifyOTP = async (
   otp: string,
 ): Promise<OTPVerifyResponse> => {
   try {
-    const response = await authApi.post<OTPVerifyResponse>(
+    const response = await publicApi.post<OTPVerifyResponse>(
       '/auth/otp/verify/',
       {
         phone_number: phoneNumber,

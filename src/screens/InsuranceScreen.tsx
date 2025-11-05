@@ -8,11 +8,13 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Platform,
+  NativeModules,
+  Linking,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
 import { uploadPolicy } from '../services/policy';
 
-const InsuranceScreen = () => {
+const InsuranceScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [selectedFile, setSelectedFile] = useState<{
     uri: string;
@@ -22,20 +24,75 @@ const InsuranceScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFilePick = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'mixed',
-      selectionLimit: 1,
-    });
+    if (Platform.OS !== 'android') {
+      Alert.alert(
+        'Unsupported',
+        'PDF picker is currently supported only on Android in this build.',
+      );
+      return;
+    }
 
-    if (result.assets && result.assets[0]) {
-      const file = result.assets[0];
-      if (file.uri && file.type && file.fileName) {
-        setSelectedFile({
-          uri: file.uri,
-          type: file.type,
-          name: file.fileName,
-        });
+    // Use only our SAF-based native module (no fallback needed)
+    const nativeModule = (NativeModules as any).FilePickerModule;
+
+    if (!nativeModule) {
+      Alert.alert(
+        'Error',
+        'File picker native module not available. Make sure native dependency is installed and the app was rebuilt.',
+      );
+      return;
+    }
+
+    try {
+      if (typeof nativeModule?.showFilePicker === 'function') {
+        // Promise-based API (our SAF module)
+        const options = { title: 'Select PDF' };
+        (nativeModule.showFilePicker(options) as Promise<any>)
+          .then((response: any) => {
+            if (!response) return;
+            if (response.didCancel) return;
+            // Our Kotlin module returns fileName, uri, type, size
+            const uri = response.uri;
+            const name = response.fileName || (uri && uri.split('/').pop());
+            const type = response.type || 'application/pdf';
+            if (uri && name) {
+              setSelectedFile({ uri, type, name });
+            } else {
+              Alert.alert('Error', 'Could not read selected file');
+            }
+          })
+          .catch((err: any) => {
+            console.error('FilePicker error:', err);
+            const errMsg = String(err?.message || err || '');
+            if (
+              errMsg.toLowerCase().includes('permission') ||
+              errMsg.toLowerCase().includes('user rejected')
+            ) {
+              Alert.alert(
+                'Permission required',
+                'Storage permission was denied. To pick a file, enable storage permission in app settings.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Open Settings',
+                    onPress: () => {
+                      Linking.openSettings().catch(() => {
+                        Alert.alert('Error', 'Unable to open settings');
+                      });
+                    },
+                  },
+                ],
+              );
+            } else {
+              Alert.alert('Error', 'Failed to pick file');
+            }
+          });
+      } else {
+        Alert.alert('Error', 'File picker not supported by native module');
       }
+    } catch (err) {
+      console.error('handleFilePick error:', err);
+      Alert.alert('Error', 'Unexpected error while opening file picker');
     }
   };
 
@@ -115,18 +172,9 @@ const InsuranceScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    padding: 20,
-  },
-  icon: {
-    fontSize: 48,
-    textAlign: 'center',
-    marginVertical: 16,
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  content: { padding: 20 },
+  icon: { fontSize: 48, textAlign: 'center', marginVertical: 16 },
   pageTitle: {
     fontSize: 32,
     fontWeight: 'bold',
@@ -138,10 +186,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -153,12 +198,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
   },
-  label: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
+  label: { fontSize: 16, color: '#333', marginBottom: 8, fontWeight: '500' },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -176,29 +216,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     backgroundColor: '#f5f5f5',
   },
-  fileSelected: {
-    borderColor: '#4DB6AC',
-    backgroundColor: '#E8F6F5',
-  },
-  filePickerText: {
-    color: '#666',
-    fontSize: 16,
-    textAlign: 'center',
-  },
+  fileSelected: { borderColor: '#4DB6AC', backgroundColor: '#E8F6F5' },
+  filePickerText: { color: '#666', fontSize: 16, textAlign: 'center' },
   button: {
     backgroundColor: '#4DB6AC',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonDisabled: {
-    backgroundColor: '#A5D1CB',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  buttonDisabled: { backgroundColor: '#A5D1CB' },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 
 export default InsuranceScreen;
