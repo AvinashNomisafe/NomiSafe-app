@@ -2,6 +2,8 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import { store } from './src/store/store';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
@@ -18,6 +20,7 @@ import InsuranceScreen from './src/screens/InsuranceScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
 import TutorialsScreen from './src/screens/TutorialsScreen';
 import AppHeader from './src/components/AppHeader';
+import AadhaarVerificationScreen from './src/screens/AadhaarVerificationScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -34,7 +37,7 @@ const Navigation = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={isAuthenticated ? "Home" : "PhoneLogin"}
+      initialRouteName={isAuthenticated ? 'Home' : 'PhoneLogin'}
       screenOptions={{
         headerStyle: {
           backgroundColor: '#4DB6AC',
@@ -43,7 +46,8 @@ const Navigation = () => {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-      }}>
+      }}
+    >
       {!isAuthenticated ? (
         // Auth screens
         <>
@@ -119,6 +123,11 @@ const Navigation = () => {
             component={ProfileScreen}
             options={{ title: 'Profile' }}
           />
+          <Stack.Screen
+            name="AadhaarVerification"
+            component={AadhaarVerificationScreen}
+            options={{ title: 'Aadhaar Verification' }}
+          />
         </>
       )}
     </Stack.Navigator>
@@ -127,14 +136,16 @@ const Navigation = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <AppHeader />
-        <NavigationContainer>
-          <Navigation />
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <SafeAreaProvider>
+          <AppHeader />
+          <NavigationContainer>
+            <Navigation />
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </AuthProvider>
+    </Provider>
   );
 }
 

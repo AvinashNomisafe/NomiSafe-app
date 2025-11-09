@@ -16,6 +16,7 @@ export interface AuthState {
   refreshToken: string | null;
   userId: number | null;
   phoneNumber: string | null;
+  isAadhaarVerified: boolean;
 }
 
 export interface AuthError {

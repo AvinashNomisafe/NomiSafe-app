@@ -9,4 +9,5 @@ export type RootStackParamList = {
   Service: undefined;
   SafeVault: undefined;
   Profile: undefined;
+  AadhaarVerification: undefined;
 };

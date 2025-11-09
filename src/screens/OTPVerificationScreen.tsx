@@ -28,6 +28,9 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
 
+  // Auth context - obtain login to update AuthContext after successful OTP verify
+  const { login } = useAuth();
+
   // refs for 6 inputs
   const inputs = useRef<Array<TextInput | null>>([]);
 
@@ -57,10 +60,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       setIsLoading(true);
       const response = await authService.verifyOTP(phoneNumber, otp);
 
-      // Get the auth context
-      const { login } = useAuth();
-
-      // Store the auth data in context
+      // Store the auth data in context (login is obtained from top-level hook)
       await login({
         accessToken: response.access,
         refreshToken: response.refresh,

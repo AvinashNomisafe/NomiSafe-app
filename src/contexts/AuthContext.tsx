@@ -4,10 +4,20 @@ import {
   storeAuthData,
   clearAuthData,
 } from '../utils/authStorage';
+import { authApi } from '../services/auth';
+import { useDispatch } from 'react-redux';
+import { setAuthState, setAadhaarVerified } from '../store/authSlice';
+
+interface UserType {
+  userId: number;
+  phoneNumber: string;
+  isAadhaarVerified: boolean;
+}
 
 interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
+  user: UserType | null;
   userId: number | null;
   phoneNumber: string | null;
   accessToken: string | null;
@@ -17,6 +27,7 @@ interface AuthContextType {
     refreshToken: string;
     userId: number;
     phoneNumber: string;
+    user?: UserType;
   }) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -26,8 +37,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<UserType | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -44,6 +57,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setPhoneNumber(storedAuth.phoneNumber);
           setAccessToken(storedAuth.accessToken);
           setRefreshToken(storedAuth.refreshToken);
+
+          // Update Redux state
+          dispatch(
+            setAuthState({
+              isAuthenticated: true,
+              accessToken: storedAuth.accessToken,
+              refreshToken: storedAuth.refreshToken,
+              userId: storedAuth.userId,
+              phoneNumber: storedAuth.phoneNumber,
+              isAadhaarVerified: storedAuth.user?.isAadhaarVerified || false,
+            }),
+          );
+          // ensure axios authApi has the Authorization header set so subsequent
+          // requests from the app include the token immediately
+          if (storedAuth.accessToken) {
+            authApi.defaults.headers.Authorization = `Bearer ${storedAuth.accessToken}`;
+          }
+
+          if (storedAuth.user) {
+            setUser(storedAuth.user);
+          } else {
+            setUser({
+              userId: storedAuth.userId,
+              phoneNumber: storedAuth.phoneNumber || '',
+              isAadhaarVerified: false,
+            });
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -60,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     refreshToken: string;
     userId: number;
     phoneNumber: string;
+    user?: UserType;
   }) => {
     await storeAuthData(authData);
     setIsAuthenticated(true);
@@ -67,6 +108,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setPhoneNumber(authData.phoneNumber);
     setAccessToken(authData.accessToken);
     setRefreshToken(authData.refreshToken);
+    // set axios default header so other services pick it up immediately
+    if (authData.accessToken) {
+      authApi.defaults.headers.Authorization = `Bearer ${authData.accessToken}`;
+    }
+    if (authData.user) {
+      setUser(authData.user);
+    } else {
+      setUser({
+        userId: authData.userId,
+        phoneNumber: authData.phoneNumber,
+        isAadhaarVerified: false,
+      });
+    }
   };
 
   const logout = async () => {
@@ -76,6 +130,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setPhoneNumber(null);
     setAccessToken(null);
     setRefreshToken(null);
+    setUser(null);
+
+    // Clear Redux state
+    dispatch(
+      setAuthState({
+        isAuthenticated: false,
+        accessToken: null,
+        refreshToken: null,
+        userId: null,
+        phoneNumber: null,
+        isAadhaarVerified: false,
+      }),
+    );
+    // clear axios default header
+    delete authApi.defaults.headers.Authorization;
   };
 
   return (
@@ -83,6 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         isLoading,
         isAuthenticated,
+        user,
         userId,
         phoneNumber,
         accessToken,

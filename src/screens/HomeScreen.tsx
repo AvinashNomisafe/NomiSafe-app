@@ -7,15 +7,21 @@ import {
   TouchableOpacity,
   SafeAreaView,
   TextInput,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const isAadhaarVerified = useSelector(
+    (state: RootState) => state.auth.isAadhaarVerified,
+  );
 
   const menuItems = [
     {
@@ -82,7 +88,26 @@ const HomeScreen = () => {
         <TouchableOpacity
           key={item.id}
           style={styles.menuItem}
-          onPress={() => navigation.navigate(item.route as any)}
+          onPress={() => {
+            if (!isAadhaarVerified) {
+              Alert.alert(
+                'Verification Required',
+                'Please verify your Aadhaar to access this feature.',
+                [
+                  {
+                    text: 'Verify Now',
+                    onPress: () => navigation.navigate('AadhaarVerification'),
+                  },
+                  {
+                    text: 'Cancel',
+                    style: 'cancel',
+                  },
+                ],
+              );
+              return;
+            }
+            navigation.navigate(item.route as any);
+          }}
         >
           <Text style={styles.menuIcon}>{item.icon}</Text>
           <Text style={styles.menuTitle}>{item.title}</Text>
@@ -110,10 +135,26 @@ const HomeScreen = () => {
     </View>
   );
 
+  const renderVerificationBanner = () => {
+    if (isAadhaarVerified) return null;
+    return (
+      <TouchableOpacity
+        style={styles.verificationBanner}
+        onPress={() => navigation.navigate('AadhaarVerification')}
+      >
+        <Text style={styles.verificationText}>
+          🔔 Please verify your Aadhaar to unlock all features
+        </Text>
+        <Text style={styles.verifyNowText}>Verify Now →</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* {renderHeader()} */}
       <ScrollView style={styles.scrollView}>
+        {renderVerificationBanner()}
         {renderSearchBar()}
         {renderTabButtons()}
         {renderMenuGrid()}
@@ -157,6 +198,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  verificationBanner: {
+    backgroundColor: '#FFB74D',
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  verificationText: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 14,
+  },
+  verifyNowText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
   scrollView: {
     flex: 1,
