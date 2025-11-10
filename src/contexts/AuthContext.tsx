@@ -93,6 +93,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     initializeAuth();
+
+    // Setup axios interceptor to listen for auth failures and auto-logout
+    const interceptor = authApi.interceptors.response.use(
+      response => response,
+      async error => {
+        // If we get a 401 after token refresh attempts, logout
+        if (error.config?._retry && error.response?.status === 401) {
+          console.log('Token refresh failed, logging out...');
+          await logout();
+        }
+        return Promise.reject(error);
+      },
+    );
+
+    // Cleanup interceptor on unmount
+    return () => {
+      authApi.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   const login = async (authData: {

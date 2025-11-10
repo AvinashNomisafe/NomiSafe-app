@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { OTPRequestResponse, OTPVerifyResponse } from '../types/auth';
-import { getAuthData } from '../utils/authStorage';
+import {
+  getAuthData,
+  storeAuthData,
+  clearAuthData,
+} from '../utils/authStorage';
 import { Platform } from 'react-native';
 
 // Use 10.0.2.2 for Android emulator, localhost for iOS
@@ -43,6 +47,106 @@ authApi.interceptors.request.use(async config => {
   }
 });
 
+// Token refresh function
+export const refreshAccessToken = async (
+  refreshToken: string,
+): Promise<{ access: string; refresh: string } | null> => {
+  try {
+    const response = await publicApi.post('/auth/token/refresh/', {
+      refresh: refreshToken,
+    });
+    return {
+      access: response.data.access,
+      refresh: response.data.refresh || refreshToken, // Some implementations return new refresh token
+    };
+  } catch (error) {
+    console.error('Failed to refresh token:', error);
+    return null;
+  }
+};
+
+// Flag to prevent multiple simultaneous refresh attempts
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const subscribeTokenRefresh = (cb: (token: string) => void) => {
+  refreshSubscribers.push(cb);
+};
+
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+};
+
+// Add response interceptor to handle token refresh
+authApi.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config;
+
+    // If error is 401 and we haven't tried to refresh yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If already refreshing, wait for the new token
+        return new Promise(resolve => {
+          subscribeTokenRefresh((token: string) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(authApi(originalRequest));
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const authData = await getAuthData();
+        if (!authData.refreshToken) {
+          // No refresh token available, logout
+          await clearAuthData();
+          isRefreshing = false;
+          return Promise.reject(error);
+        }
+
+        const tokens = await refreshAccessToken(authData.refreshToken);
+
+        if (!tokens) {
+          // Refresh failed, logout
+          await clearAuthData();
+          isRefreshing = false;
+          return Promise.reject(error);
+        }
+
+        // Save new tokens
+        await storeAuthData({
+          accessToken: tokens.access,
+          refreshToken: tokens.refresh,
+          userId: authData.userId!,
+          phoneNumber: authData.phoneNumber!,
+          user: authData.user,
+        });
+
+        // Update the default authorization header
+        authApi.defaults.headers.Authorization = `Bearer ${tokens.access}`;
+        originalRequest.headers.Authorization = `Bearer ${tokens.access}`;
+
+        // Notify all subscribers
+        onTokenRefreshed(tokens.access);
+        isRefreshing = false;
+
+        // Retry the original request
+        return authApi(originalRequest);
+      } catch (refreshError) {
+        isRefreshing = false;
+        await clearAuthData();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 // Create an authenticated axios instance
 export const createAuthenticatedApi = (accessToken: string) => {
   return axios.create({
@@ -72,8 +176,6 @@ export const sendOTP = async (phoneNumber: string): Promise<boolean> => {
     throw error;
   }
 };
-
-import { storeAuthData } from '../utils/authStorage';
 
 export const verifyOTP = async (
   phoneNumber: string,

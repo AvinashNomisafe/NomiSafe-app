@@ -1,5 +1,13 @@
 import { authApi } from './auth';
 
+export interface Policy {
+  id: number;
+  name: string;
+  document_url: string;
+  benefits: string;
+  uploaded_at: string;
+}
+
 export interface PolicyUploadResponse {
   id: number;
   name: string;
@@ -7,6 +15,16 @@ export interface PolicyUploadResponse {
   benefits: string;
   uploaded_at: string;
 }
+
+export const getPolicies = async (): Promise<Policy[]> => {
+  try {
+    const response = await authApi.get('/policies/');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch policies:', error);
+    throw error;
+  }
+};
 
 export const uploadPolicy = async (
   name: string,
