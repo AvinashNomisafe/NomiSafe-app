@@ -39,94 +39,30 @@ const Navigation = () => {
     <Stack.Navigator
       initialRouteName={isAuthenticated ? 'Home' : 'PhoneLogin'}
       screenOptions={{
-        headerStyle: {
-          backgroundColor: '#4DB6AC',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerShown: false,
       }}
     >
       {!isAuthenticated ? (
-        // Auth screens
         <>
-          <Stack.Screen
-            name="PhoneLogin"
-            component={PhoneLoginScreen}
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="PhoneLogin" component={PhoneLoginScreen} />
           <Stack.Screen
             name="OTPVerification"
             component={OTPVerificationScreen}
-            options={{ headerShown: false }}
           />
         </>
       ) : (
-        // App screens
         <>
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="MyPolicy"
-            component={MyPolicyScreen}
-            options={{
-              title: 'My Policy',
-              headerStyle: {
-                backgroundColor: '#4DB6AC',
-              },
-              headerTintColor: '#fff',
-            }}
-          />
-          <Stack.Screen
-            name="Insurance"
-            component={InsuranceScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Properties"
-            component={PropertiesScreen}
-            options={{
-              title: 'Properties',
-              headerStyle: {
-                backgroundColor: '#4DB6AC',
-              },
-              headerTintColor: '#fff',
-            }}
-          />
-          <Stack.Screen
-            name="Tutorials"
-            component={TutorialsScreen}
-            options={{
-              title: 'Tutorials',
-              headerStyle: {
-                backgroundColor: '#4DB6AC',
-              },
-              headerTintColor: '#fff',
-            }}
-          />
-          <Stack.Screen
-            name="Service"
-            component={ServiceScreen}
-            options={{ title: 'Service' }}
-          />
-          <Stack.Screen
-            name="SafeVault"
-            component={SafeVaultScreen}
-            options={{ title: 'Safe Vault' }}
-          />
-          <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{ title: 'Profile' }}
-          />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="MyPolicy" component={MyPolicyScreen} />
+          <Stack.Screen name="Insurance" component={InsuranceScreen} />
+          <Stack.Screen name="Properties" component={PropertiesScreen} />
+          <Stack.Screen name="Tutorials" component={TutorialsScreen} />
+          <Stack.Screen name="Service" component={ServiceScreen} />
+          <Stack.Screen name="SafeVault" component={SafeVaultScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen
             name="AadhaarVerification"
             component={AadhaarVerificationScreen}
-            options={{ title: 'Aadhaar Verification' }}
           />
         </>
       )}

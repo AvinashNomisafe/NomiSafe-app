@@ -50,38 +50,6 @@ const HomeScreen = () => {
     },
   ];
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>NOMISAFE</Text>
-      </View>
-    </View>
-  );
-
-  const renderSearchBar = () => (
-    <View style={styles.searchContainer}>
-      <View style={styles.searchBox}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search your"
-          placeholderTextColor="#666"
-        />
-      </View>
-    </View>
-  );
-
-  const renderTabButtons = () => (
-    <View style={styles.tabContainer}>
-      <TouchableOpacity style={[styles.tabButton, styles.activeTab]}>
-        <Text style={styles.activeTabText}>Home</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.tabButton}>
-        <Text style={styles.tabText}>Dashboard</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   const renderMenuGrid = () => (
     <View style={styles.menuGrid}>
       {menuItems.map(item => (
@@ -116,25 +84,6 @@ const HomeScreen = () => {
     </View>
   );
 
-  const renderPendingTasks = () => (
-    <View style={styles.taskContainer}>
-      <Text style={styles.sectionTitle}>Pending Task</Text>
-      <View style={styles.taskCard}>
-        <View style={styles.taskHeader}>
-          <Text style={styles.taskCount}>⚪ Action Pending</Text>
-          <View style={styles.criticalBadge}>
-            <Text style={styles.criticalText}>Critical Action</Text>
-          </View>
-          <Text style={styles.taskNumber}>5</Text>
-        </View>
-        <View style={styles.taskList}>
-          <Text style={styles.taskItem}>• Add Nominee Details</Text>
-          <Text style={styles.taskItem}>• LIC Renewal</Text>
-        </View>
-      </View>
-    </View>
-  );
-
   const renderVerificationBanner = () => {
     if (isAadhaarVerified) return null;
     return (
@@ -155,10 +104,9 @@ const HomeScreen = () => {
       {/* {renderHeader()} */}
       <ScrollView style={styles.scrollView}>
         {renderVerificationBanner()}
-        {renderSearchBar()}
-        {renderTabButtons()}
+
         {renderMenuGrid()}
-        {renderPendingTasks()}
+        {/* {renderPendingTasks()} */}
       </ScrollView>
       <View style={styles.bottomNav}>
         <TouchableOpacity

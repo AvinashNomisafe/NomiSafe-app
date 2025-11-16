@@ -11,7 +11,6 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import * as authService from '../services/auth';
 
@@ -74,17 +73,20 @@ const PhoneLoginScreen: React.FC<PhoneLoginScreenProps> = ({ navigation }) => {
         {/* Top logo */}
         <View style={styles.logoWrap}>
           {/* Replace with real logo image if available */}
-          <Text style={styles.logoText}>NOMISAFE</Text>
         </View>
 
         {/* Illustration */}
         <View style={styles.illustration}>
-          <Text style={styles.illustrationIcon}>🔒</Text>
+          <Image
+            source={require('../assets/images/phone_login_screen.png')}
+            style={styles.illustrationImage}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.title}>Enter Mobile Number For LogIn</Text>
         <Text style={styles.subtitle}>
-          We will send an One Time Password on this number
+          We will send an OTP on this number for verification
         </Text>
 
         <View style={styles.inputRow}>
@@ -118,14 +120,6 @@ const PhoneLoginScreen: React.FC<PhoneLoginScreenProps> = ({ navigation }) => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.link} onPress={() => {}}>
-          <Text style={styles.linkText}>Login with Email ID ? Click here</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.link} onPress={() => {}}>
-          <Text style={styles.linkText}>Don't have an account? Sign up</Text>
-        </TouchableOpacity>
-
         <Text style={styles.footer}>Copyright © NOMISAFE 2025.</Text>
       </ScrollView>
     </SafeAreaView>
@@ -154,17 +148,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E8F6F5',
     marginBottom: 24,
   },
-  illustrationIcon: { fontSize: 72 },
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
+  },
   title: {
+    marginTop: 50,
     fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
+    fontWeight: '500',
+    marginBottom: 15,
     textAlign: 'center',
   },
-  subtitle: { textAlign: 'center', color: '#666', marginBottom: 16 },
+  subtitle: {
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 16,
+    paddingHorizontal: 30,
+  },
   inputRow: {
     flexDirection: 'row',
     width: '100%',

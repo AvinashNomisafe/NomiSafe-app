@@ -9,6 +9,7 @@ import {
   Alert,
   SafeAreaView,
   ScrollView,
+  Image,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -146,12 +147,14 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.logoWrap}>
-          <Text style={styles.logoText}>NOMISAFE</Text>
-        </View>
+        <View style={styles.logoWrap}></View>
 
         <View style={styles.illustration}>
-          <Text style={styles.illustrationIcon}>🔒</Text>
+          <Image
+            source={require('../assets/images/phone_login_screen.png')}
+            style={styles.illustrationImage}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.title}>OTP Verification</Text>
@@ -196,13 +199,6 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
           )}
         </View>
 
-        <TouchableOpacity style={styles.link} onPress={() => {}}>
-          <Text style={styles.linkText}>Login with Email ID ? Click here</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.link} onPress={() => {}}>
-          <Text style={styles.linkText}>Don't have an account? Sign up</Text>
-        </TouchableOpacity>
-
         <Text style={styles.footer}>Copyright © NOMISAFE 2025.</Text>
       </ScrollView>
     </SafeAreaView>
@@ -216,25 +212,40 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 16,
   },
-  logoWrap: { marginTop: 8, marginBottom: 18 },
-  logoText: { color: '#0B7D76', fontWeight: '700', letterSpacing: 2 },
+  logoWrap: {
+    marginTop: 8,
+    marginBottom: 18,
+  },
+  logoText: {
+    color: '#0B7D76',
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
   illustration: {
     width: 220,
     height: 220,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E8F6F5',
     marginBottom: 24,
   },
-  illustrationIcon: { fontSize: 72 },
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
+  },
   title: {
+    marginTop: 50,
     fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
+    fontWeight: '500',
+    marginBottom: 15,
     textAlign: 'center',
   },
-  subtitle: { textAlign: 'center', color: '#666', marginBottom: 16 },
+  subtitle: {
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 16,
+    paddingHorizontal: 30,
+  },
   otpRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
