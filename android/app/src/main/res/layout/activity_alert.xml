@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:gravity="center"
+  android:padding="24dp"
+  android:background="#CC000000">
+
+  <TextView
+    android:id="@+id/alertTitle"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Nomisafe Alert"
+    android:textColor="#FFFFFF"
+    android:textSize="24sp"
+    android:layout_marginBottom="16dp" />
+
+  <TextView
+    android:id="@+id/alertMessage"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Shake detected. Proceed with emergency action?"
+    android:textColor="#FFFFFF"
+    android:textSize="16sp"
+    android:layout_marginBottom="32dp" />
+
+  <Button
+    android:id="@+id/allowButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Allow"
+    android:backgroundTint="#4DB6AC"
+    android:textColor="#FFFFFF"
+    android:layout_marginBottom="12dp" />
+
+  <Button
+    android:id="@+id/cancelButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="Cancel" />
+
+</LinearLayout>

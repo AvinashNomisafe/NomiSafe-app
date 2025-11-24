@@ -16,10 +16,9 @@ class MainApplication : Application(), ReactApplication {
       object : DefaultReactNativeHost(this) {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
-              // Packages that cannot be autolinked yet can be added manually here, for example:
-              // add(MyReactNativePackage())
-              // Register the FilePickerPackage so we can use SAF (ACTION_OPEN_DOCUMENT)
+              // Manual packages
               add(FilePickerPackage())
+              add(ShakeServicePackage())
             }
 
         override fun getJSMainModuleName(): String = "index"

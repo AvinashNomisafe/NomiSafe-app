@@ -1,11 +1,18 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { store } from './src/store/store';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  NativeModules,
+  Platform,
+  PermissionsAndroid,
+} from 'react-native';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import PhoneLoginScreen from './src/screens/PhoneLoginScreen';
 import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
@@ -71,6 +78,27 @@ const Navigation = () => {
 };
 
 function App() {
+  useEffect(() => {
+    const init = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          console.log('[ShakeService] Starting initialization...');
+          if (Platform.Version >= 33) {
+            const result = await PermissionsAndroid.request(
+              'android.permission.POST_NOTIFICATIONS',
+            );
+            console.log('[ShakeService] Notification permission:', result);
+          }
+          console.log('[ShakeService] About to start service...');
+          NativeModules.ShakeServiceModule?.startService();
+          console.log('[ShakeService] Service start called');
+        } catch (e) {
+          console.log('Shake service init failed', e);
+        }
+      }
+    };
+    init();
+  }, []);
   return (
     <Provider store={store}>
       <AuthProvider>

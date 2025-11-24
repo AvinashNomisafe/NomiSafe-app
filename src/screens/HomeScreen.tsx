@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   TextInput,
   Alert,
+  NativeModules,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
@@ -19,6 +21,12 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+
+  const handleTestShakeAlert = () => {
+    if (Platform.OS === 'android') {
+      NativeModules.ShakeServiceModule?.triggerTestAlert();
+    }
+  };
 
   const menuItems = [
     {
@@ -67,6 +75,13 @@ const HomeScreen = () => {
       {/* {renderHeader()} */}
       <ScrollView style={styles.scrollView}>
         {renderMenuGrid()}
+        {/* Test Shake Alert Button */}
+        <TouchableOpacity
+          style={styles.testButton}
+          onPress={handleTestShakeAlert}
+        >
+          <Text style={styles.testButtonText}>🚨 Test Shake Alert</Text>
+        </TouchableOpacity>
         {/* {renderPendingTasks()} */}
       </ScrollView>
       <View style={styles.bottomNav}>
@@ -108,7 +123,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  // ...existing code...
+  testButton: {
+    backgroundColor: '#FF5722',
+    margin: 16,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  testButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   scrollView: {
     flex: 1,
   },

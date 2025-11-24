@@ -7,11 +7,13 @@ import {
 } from '../utils/authStorage';
 import { Platform } from 'react-native';
 
-// Use 10.0.2.2 for Android emulator, localhost for iOS
+// Use your Mac's IP for real devices, 10.0.2.2 for emulator
 const API_BASE_URL = Platform.select({
-  android: 'http://10.0.2.2:8000/api',
+  android: __DEV__
+    ? 'http://192.168.1.103:8000/api' // Real device - use Mac's IP
+    : 'http://10.0.2.2:8000/api', // Emulator fallback
   ios: 'http://127.0.0.1:8000/api',
-  default: 'http://127.0.0.1:8000/api',
+  default: 'http://192.168.1.103:8000/api',
 });
 
 // Base axios instance for non-authenticated requests
