@@ -10,6 +10,7 @@ import {
   NativeModules,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -63,25 +64,25 @@ const HomeScreen = () => {
     {
       id: 1,
       title: 'My Policy',
-      icon: '📋',
+      icon: require('../assets/icons/policy_icon.png'),
       route: 'MyPolicy' as keyof RootStackParamList,
     },
     {
       id: 2,
       title: 'Insurance',
-      icon: '🏥',
+      icon: require('../assets/icons/insurance_icon.png'),
       route: 'Insurance' as keyof RootStackParamList,
     },
     {
       id: 3,
       title: 'Properties',
-      icon: '🏠',
+      icon: require('../assets/icons/properties_icon.png'),
       route: 'Properties' as keyof RootStackParamList,
     },
     {
       id: 4,
       title: 'Tutorials',
-      icon: '📚',
+      icon: require('../assets/icons/tutorials_icon.png'),
       route: 'Tutorials' as keyof RootStackParamList,
     },
   ];
@@ -94,7 +95,11 @@ const HomeScreen = () => {
           style={styles.menuItem}
           onPress={() => navigation.navigate(item.route as any)}
         >
-          <Text style={styles.menuIcon}>{item.icon}</Text>
+          <Image
+            source={item.icon}
+            style={styles.menuIconImage}
+            resizeMode="contain"
+          />
           <Text style={styles.menuTitle}>{item.title}</Text>
         </TouchableOpacity>
       ))}
@@ -301,6 +306,11 @@ const styles = StyleSheet.create({
   },
   menuIcon: {
     fontSize: 32,
+    marginBottom: 8,
+  },
+  menuIconImage: {
+    width: 70,
+    height: 70,
     marginBottom: 8,
   },
   menuTitle: {
