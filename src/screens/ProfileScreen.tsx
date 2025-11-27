@@ -12,6 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import AppHeader from '../components/AppHeader';
+import BottomNavigation from '../components/BottomNavigation';
 
 type ProfileScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'Profile'>;
@@ -169,6 +170,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
+      <BottomNavigation />
     </SafeAreaView>
   );
 };

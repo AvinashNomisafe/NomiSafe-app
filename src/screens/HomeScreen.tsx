@@ -18,6 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { runAPITest } from '../services/apiTest';
 import { ENVIRONMENT, API_BASE_URL } from '../config/api';
 import AppHeader from '../components/AppHeader';
+import BottomNavigation from '../components/BottomNavigation';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -145,36 +146,7 @@ const HomeScreen = () => {
         </TouchableOpacity>
         {/* {renderPendingTasks()} */}
       </ScrollView>
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.bottomNavItem}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text>🏠</Text>
-          <Text style={styles.bottomNavText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.bottomNavItem}
-          onPress={() => navigation.navigate('Service')}
-        >
-          <Text>⚙️</Text>
-          <Text style={styles.bottomNavText}>Service</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.bottomNavItem}
-          onPress={() => navigation.navigate('SafeVault')}
-        >
-          <Text>🔒</Text>
-          <Text style={styles.bottomNavText}>Safe Vault</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.bottomNavItem}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Text>👤</Text>
-          <Text style={styles.bottomNavText}>Profile</Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation />
     </SafeAreaView>
   );
 };
@@ -376,20 +348,6 @@ const styles = StyleSheet.create({
   },
   taskItem: {
     marginBottom: 8,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingVertical: 8,
-  },
-  bottomNavItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  bottomNavText: {
-    fontSize: 12,
-    marginTop: 4,
   },
 });
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader';
+import BottomNavigation from '../components/BottomNavigation';
 
 const SafeVaultScreen = () => {
   return (
@@ -11,6 +12,7 @@ const SafeVaultScreen = () => {
         <Text style={styles.title}>Safe Vault</Text>
         <Text style={styles.banner}>COMING SOON</Text>
       </View>
+      <BottomNavigation />
     </SafeAreaView>
   );
 };
@@ -18,9 +20,12 @@ const SafeVaultScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 32,

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader';
+import BottomNavigation from '../components/BottomNavigation';
 
 const TutorialsScreen = () => {
   return (
@@ -12,6 +13,7 @@ const TutorialsScreen = () => {
         <Text style={styles.title}>Tutorials</Text>
         <Text style={styles.banner}>COMING SOON</Text>
       </View>
+      <BottomNavigation />
     </SafeAreaView>
   );
 };

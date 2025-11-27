@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { uploadPolicy, getPolicies, Policy } from '../services/policy';
 import AppHeader from '../components/AppHeader';
+import BottomNavigation from '../components/BottomNavigation';
 
 const InsuranceScreen: React.FC = () => {
   const [name, setName] = useState('');
@@ -312,6 +313,7 @@ const InsuranceScreen: React.FC = () => {
           <Text style={styles.fabText}>+ Add Policy</Text>
         </TouchableOpacity>
       )}
+      <BottomNavigation />
     </SafeAreaView>
   );
 };
