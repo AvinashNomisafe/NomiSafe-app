@@ -14,14 +14,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store/store';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { runAPITest } from '../services/apiTest';
 import { ENVIRONMENT, API_BASE_URL } from '../config/api';
 import AppHeader from '../components/AppHeader';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
