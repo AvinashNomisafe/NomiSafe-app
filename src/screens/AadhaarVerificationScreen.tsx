@@ -7,9 +7,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ import { authApi, createAuthenticatedApi } from '../services/auth';
 import { useDispatch } from 'react-redux';
 import { setAadhaarVerified } from '../store/authSlice';
 import axios from 'axios';
+import AppHeader from '../components/AppHeader';
 
 type AadhaarVerificationScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'AadhaarVerification'>;
@@ -141,12 +142,9 @@ export const AadhaarVerificationScreen: React.FC<
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <AppHeader />
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.logoWrap}>
-          <Text style={styles.logoText}>NOMISAFE</Text>
-        </View>
-
         <View style={styles.illustration}>
           <Text style={styles.illustrationIcon}>🔒</Text>
         </View>

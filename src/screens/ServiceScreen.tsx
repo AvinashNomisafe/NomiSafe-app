@@ -1,14 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppHeader from '../components/AppHeader';
 
 const ServiceScreen = () => {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <AppHeader />
       <View style={styles.content}>
         <Text style={styles.title}>Service</Text>
         <Text style={styles.banner}>COMING SOON</Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

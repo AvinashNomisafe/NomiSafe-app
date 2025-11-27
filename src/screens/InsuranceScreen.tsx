@@ -13,7 +13,9 @@ import {
   Linking,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { uploadPolicy, getPolicies, Policy } from '../services/policy';
+import AppHeader from '../components/AppHeader';
 
 const InsuranceScreen: React.FC = () => {
   const [name, setName] = useState('');
@@ -283,15 +285,22 @@ const InsuranceScreen: React.FC = () => {
 
   if (isFetchingPolicies) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#4DB6AC" />
-        <Text style={styles.loadingText}>Loading policies...</Text>
-      </View>
+      <SafeAreaView
+        style={[styles.container, styles.centerContent]}
+        edges={['bottom']}
+      >
+        <AppHeader />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4DB6AC" />
+          <Text style={styles.loadingText}>Loading policies...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <AppHeader />
       {showForm ? (
         <ScrollView style={styles.container}>{renderUploadForm()}</ScrollView>
       ) : (
@@ -303,13 +312,18 @@ const InsuranceScreen: React.FC = () => {
           <Text style={styles.fabText}>+ Add Policy</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -1,15 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppHeader from '../components/AppHeader';
 
 const PropertiesScreen = () => {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <AppHeader />
       <View style={styles.content}>
         <Text style={styles.icon}>🏠</Text>
         <Text style={styles.title}>Properties</Text>
         <Text style={styles.banner}>COMING SOON</Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

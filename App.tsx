@@ -26,7 +26,6 @@ import MyPolicyScreen from './src/screens/MyPolicyScreen';
 import InsuranceScreen from './src/screens/InsuranceScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
 import TutorialsScreen from './src/screens/TutorialsScreen';
-import AppHeader from './src/components/AppHeader';
 import AadhaarVerificationScreen from './src/screens/AadhaarVerificationScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -103,7 +102,6 @@ function App() {
     <Provider store={store}>
       <AuthProvider>
         <SafeAreaProvider>
-          <AppHeader />
           <NavigationContainer>
             <Navigation />
           </NavigationContainer>

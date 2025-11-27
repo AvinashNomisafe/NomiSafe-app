@@ -5,16 +5,15 @@ import {
   storeAuthData,
   clearAuthData,
 } from '../utils/authStorage';
-import { Platform } from 'react-native';
+import {
+  API_BASE_URL,
+  API_TIMEOUT,
+  ENVIRONMENT,
+  logAPICall,
+} from '../config/api';
 
-// Use your Mac's IP for real devices, 10.0.2.2 for emulator
-const API_BASE_URL = Platform.select({
-  android: __DEV__
-    ? 'http://192.168.1.103:8000/api' // Real device - use Mac's IP
-    : 'http://10.0.2.2:8000/api', // Emulator fallback
-  ios: 'http://127.0.0.1:8000/api',
-  default: 'http://192.168.1.103:8000/api',
-});
+console.log(`🚀 API Environment: ${ENVIRONMENT}`);
+console.log(`🌐 API Base URL: ${API_BASE_URL}`);
 
 // Base axios instance for non-authenticated requests
 export const authApi = axios.create({
@@ -22,7 +21,7 @@ export const authApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 second timeout
+  timeout: API_TIMEOUT,
 });
 
 // Public API instance: used for endpoints that must be called without
@@ -33,7 +32,7 @@ export const publicApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: API_TIMEOUT,
 });
 
 // Add a request interceptor to include the access token
