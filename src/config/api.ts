@@ -13,7 +13,7 @@ export const ENVIRONMENT: Environment = __DEV__ ? 'development' : 'production';
 
 export const API_CONFIG = {
   development: {
-    baseURL: 'http://192.168.1.105:8000/api', // Your local Mac IP
+    baseURL: 'http://192.168.1.102:8000/api', // Your local Mac IP
     timeout: 10000,
   },
   production: {
