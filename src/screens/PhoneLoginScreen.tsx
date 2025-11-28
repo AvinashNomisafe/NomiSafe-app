@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     padding: 24,
-    paddingTop: 16,
+    paddingTop: 100,
   },
   logoWrap: {
     marginTop: 8,
