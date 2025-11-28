@@ -1,23 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Alert,
-  NativeModules,
-  Platform,
-  ActivityIndicator,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { runAPITest } from '../services/apiTest';
-import { ENVIRONMENT, API_BASE_URL } from '../config/api';
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 
@@ -25,40 +18,6 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const [isTestingAPI, setIsTestingAPI] = useState(false);
-
-  const handleTestAPI = async () => {
-    setIsTestingAPI(true);
-    try {
-      const results = await runAPITest();
-
-      // Show alert with results
-      const successCount = Object.values(results.endpoints).filter(
-        r => r.status === 'success' || r.statusCode,
-      ).length;
-      const totalCount = Object.keys(results.endpoints).length;
-
-      Alert.alert(
-        'API Test Results',
-        `Environment: ${ENVIRONMENT}\nBase URL: ${API_BASE_URL}\n\nEndpoints: ${successCount}/${totalCount} reachable\n\nCheck console for detailed results.`,
-        [{ text: 'OK' }],
-      );
-    } catch (error) {
-      Alert.alert(
-        'API Test Failed',
-        'Could not connect to server. Check console for details.',
-      );
-      console.error('API test error:', error);
-    } finally {
-      setIsTestingAPI(false);
-    }
-  };
-
-  const handleTestShakeAlert = () => {
-    if (Platform.OS === 'android') {
-      NativeModules.ShakeServiceModule?.triggerTestAlert();
-    }
-  };
 
   const menuItems = [
     {
@@ -109,48 +68,7 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <AppHeader />
-      <ScrollView style={styles.scrollView}>
-        {/* API Test Section */}
-        <View style={styles.apiTestSection}>
-          <View style={styles.apiInfoBox}>
-            <Text style={styles.apiInfoLabel}>Environment:</Text>
-            <Text style={styles.apiInfoValue}>{ENVIRONMENT.toUpperCase()}</Text>
-          </View>
-          <View style={styles.apiInfoBox}>
-            <Text style={styles.apiInfoLabel}>API URL:</Text>
-            <Text style={styles.apiInfoValueSmall}>{API_BASE_URL}</Text>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.testAPIButton,
-              isTestingAPI && styles.testAPIButtonDisabled,
-            ]}
-            onPress={handleTestAPI}
-            disabled={isTestingAPI}
-          >
-            {isTestingAPI ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Text style={styles.testAPIButtonIcon}>🔍</Text>
-                <Text style={styles.testAPIButtonText}>
-                  Test API Connection
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {renderMenuGrid()}
-        {/* Test Shake Alert Button */}
-        <TouchableOpacity
-          style={styles.testButton}
-          onPress={handleTestShakeAlert}
-        >
-          <Text style={styles.testButtonText}>🚨 Test Shake Alert</Text>
-        </TouchableOpacity>
-        {/* {renderPendingTasks()} */}
-      </ScrollView>
+      <ScrollView style={styles.scrollView}>{renderMenuGrid()}</ScrollView>
       <BottomNavigation />
     </SafeAreaView>
   );
@@ -160,70 +78,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  testButton: {
-    backgroundColor: '#FF5722',
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  testButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  apiTestSection: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#4DB6AC',
-  },
-  apiInfoBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingVertical: 4,
-  },
-  apiInfoLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  apiInfoValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4DB6AC',
-  },
-  apiInfoValueSmall: {
-    fontSize: 11,
-    color: '#666',
-    maxWidth: '60%',
-    textAlign: 'right',
-  },
-  testAPIButton: {
-    backgroundColor: '#4DB6AC',
-    padding: 14,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  testAPIButtonDisabled: {
-    backgroundColor: '#B0BEC5',
-  },
-  testAPIButtonIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  testAPIButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   scrollView: {
     flex: 1,
