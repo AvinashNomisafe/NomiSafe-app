@@ -3,10 +3,19 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <!-- Android 13+ notification permission (declared; requested at runtime) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Fall detection permissions -->
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
       android:name=".MainApplication"
@@ -58,5 +67,22 @@
           android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
           android:value="Emergency shake alert detection" />
       </service>
+      
+      <!-- Fall Detection Service -->
+      <service
+        android:name=".falldetection.FallDetectionService"
+        android:enabled="true"
+        android:exported="false"
+        android:foregroundServiceType="health" />
+      
+      <!-- Fall Detection Emergency Alert Activity -->
+      <activity
+        android:name=".falldetection.EmergencyAlertActivity"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+        android:launchMode="singleTop"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
+        android:excludeFromRecents="true"
+        android:exported="false" />
     </application>
 </manifest>

@@ -10,4 +10,5 @@ export type RootStackParamList = {
   SafeVault: undefined;
   Profile: undefined;
   AadhaarVerification: undefined;
+  FallDetectionSettings: undefined;
 };

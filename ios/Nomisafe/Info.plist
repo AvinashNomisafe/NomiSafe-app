@@ -33,13 +33,22 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>NomiSafe needs your location to send to emergency contacts during a fall emergency.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>NomiSafe needs your location to send to emergency contacts during a fall emergency.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>NomiSafe uses motion sensors to detect emergency falls and protect your safety.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photo library to select PDF files for insurance policy uploads.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>We need access to your documents to select PDF files for insurance policy uploads.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>processing</string>
+		<string>location</string>
+	</array>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>

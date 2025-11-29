@@ -14,6 +14,7 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { FallDetectionProvider } from './src/contexts/FallDetectionContext';
 import PhoneLoginScreen from './src/screens/PhoneLoginScreen';
 import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
 import { RootStackParamList } from './src/types/navigation';
@@ -27,6 +28,7 @@ import InsuranceScreen from './src/screens/InsuranceScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
 import TutorialsScreen from './src/screens/TutorialsScreen';
 import AadhaarVerificationScreen from './src/screens/AadhaarVerificationScreen';
+import { FallDetectionSettingsScreen } from './src/screens/FallDetectionSettingsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -70,6 +72,11 @@ const Navigation = () => {
             name="AadhaarVerification"
             component={AadhaarVerificationScreen}
           />
+          <Stack.Screen
+            name="FallDetectionSettings"
+            component={FallDetectionSettingsScreen}
+            options={{ headerShown: true, title: 'Fall Detection' }}
+          />
         </>
       )}
     </Stack.Navigator>
@@ -101,11 +108,13 @@ function App() {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <Navigation />
-          </NavigationContainer>
-        </SafeAreaProvider>
+        <FallDetectionProvider>
+          <SafeAreaProvider>
+            <NavigationContainer>
+              <Navigation />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </FallDetectionProvider>
       </AuthProvider>
     </Provider>
   );

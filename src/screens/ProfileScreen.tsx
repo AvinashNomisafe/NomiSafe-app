@@ -166,6 +166,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           )}
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.label}>Safety Features</Text>
+          <TouchableOpacity
+            style={styles.verifyButton}
+            onPress={() => navigation.navigate('FallDetectionSettings')}
+          >
+            <Text style={styles.verifyButtonText}>Fall Detection Settings</Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>

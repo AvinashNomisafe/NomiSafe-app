@@ -9,6 +9,7 @@ import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
+import com.nomisafe.falldetection.FallDetectionPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -19,6 +20,7 @@ class MainApplication : Application(), ReactApplication {
               // Manual packages
               add(FilePickerPackage())
               add(ShakeServicePackage())
+              add(FallDetectionPackage())
             }
 
         override fun getJSMainModuleName(): String = "index"
