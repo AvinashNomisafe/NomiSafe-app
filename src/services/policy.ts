@@ -11,20 +11,9 @@ export interface Policy {
 export interface PolicyUploadResponse {
   id: number;
   name: string;
-  document: string;
-  benefits: string;
   uploaded_at: string;
+  message: string;
 }
-
-export const getPolicies = async (): Promise<Policy[]> => {
-  try {
-    const response = await authApi.get('/policies/');
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch policies:', error);
-    throw error;
-  }
-};
 
 export const uploadPolicy = async (
   name: string,
@@ -37,12 +26,11 @@ export const uploadPolicy = async (
   try {
     const formData = new FormData();
     formData.append('name', name);
-    formData.append('benefits', '');
     formData.append('document', {
       uri: document.uri,
       type: document.type || 'application/pdf',
       name: document.name,
-    });
+    } as any);
 
     const response = await authApi.post('/policies/upload/', formData, {
       headers: {
