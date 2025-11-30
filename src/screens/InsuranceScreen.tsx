@@ -13,11 +13,20 @@ import {
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
 import { uploadPolicy } from '../services/policy';
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 
+type InsuranceScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Insurance'
+>;
+
 const InsuranceScreen: React.FC = () => {
+  const navigation = useNavigation<InsuranceScreenNavigationProp>();
   const [name, setName] = useState('');
   const [selectedFile, setSelectedFile] = useState<{
     uri: string;
@@ -113,20 +122,23 @@ const InsuranceScreen: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await uploadPolicy(name, selectedFile);
-      Alert.alert(
-        'Success',
-        response.message || 'Insurance policy uploaded successfully',
-      );
+
+      // Navigate to verification screen with extracted data
+      navigation.navigate('PolicyVerification', {
+        policyId: response.id,
+        extractedData: response.extracted_data,
+      });
 
       // Reset form
       setName('');
       setSelectedFile(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      Alert.alert(
-        'Error',
-        'Failed to upload insurance policy. Please try again.',
-      );
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.message ||
+        'Failed to upload insurance policy. Please try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }

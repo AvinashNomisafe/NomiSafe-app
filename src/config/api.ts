@@ -1,38 +1,64 @@
 /**
  * API Configuration
  *
- * Automatically uses correct API based on __DEV__ flag:
- * - Development: Local backend on your Mac
- * - Production: EC2 production server
+ * Easy switching between Emulator, Physical Device, and Production
+ *
+ * TO SWITCH ENVIRONMENTS:
+ * 1. Change DEVICE_TYPE below to 'EMULATOR', 'PHYSICAL_DEVICE', or 'PRODUCTION'
+ * 2. For PHYSICAL_DEVICE: Update MAC_IP with your current Mac IP (run: ipconfig getifaddr en0)
+ * 3. Reload the app (r r in Metro)
  */
 
-export type Environment = 'development' | 'production';
+import { Platform } from 'react-native';
 
-// Automatically detect environment based on React Native __DEV__ flag
-export const ENVIRONMENT: Environment = __DEV__ ? 'development' : 'production';
+// ============================================
+// CHANGE THIS TO SWITCH ENVIRONMENTS
+// ============================================
+export type DeviceType = 'EMULATOR' | 'PHYSICAL_DEVICE' | 'PRODUCTION';
+export const DEVICE_TYPE: DeviceType = 'EMULATOR'; // <-- CHANGE THIS
 
-export const API_CONFIG = {
-  development: {
-    baseURL: 'http://192.168.1.102:8000/api', // Your local Mac IP
-    timeout: 10000,
-  },
-  production: {
-    baseURL: 'http://51.20.84.242/api', // EC2 production server
-    timeout: 15000,
-  },
+// Update this with your Mac's local IP when using physical device
+// Find it with: ipconfig getifaddr en0 (Mac) or ipconfig (Windows)
+export const MAC_IP = '192.168.1.102';
+// ============================================
+
+const getBaseURL = (): string => {
+  if (DEVICE_TYPE === 'PRODUCTION') {
+    return 'http://51.20.84.242/api';
+  }
+
+  if (DEVICE_TYPE === 'EMULATOR') {
+    // Android Emulator uses 10.0.2.2 to access host machine
+    // iOS Simulator uses localhost
+    return Platform.OS === 'android'
+      ? 'http://10.0.2.2:8000/api'
+      : 'http://localhost:8000/api';
+  }
+
+  // PHYSICAL_DEVICE
+  return `http://${MAC_IP}:8000/api`;
 };
 
-// Get current config based on environment
-export const getCurrentConfig = () => API_CONFIG[ENVIRONMENT];
+export const API_BASE_URL = getBaseURL();
+export const API_TIMEOUT = DEVICE_TYPE === 'PRODUCTION' ? 30000 : 60000; // Longer timeout for local dev (file uploads)
+// Dedicated (long) timeout for heavy policy uploads + AI extraction (Postman observed ~170s)
+export const UPLOAD_TIMEOUT_MS = DEVICE_TYPE === 'PRODUCTION' ? 180000 : 300000; // 3-5 min
 
-export const API_BASE_URL = getCurrentConfig().baseURL;
-export const API_TIMEOUT = getCurrentConfig().timeout;
+// Log current configuration on app start
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log('📡 API CONFIGURATION');
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log(`Device Type: ${DEVICE_TYPE}`);
+console.log(`Platform: ${Platform.OS}`);
+console.log(`Base URL: ${API_BASE_URL}`);
+console.log(`Timeout: ${API_TIMEOUT}ms`);
+console.log(`Upload Timeout: ${UPLOAD_TIMEOUT_MS}ms`);
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+export type Environment = 'development' | 'production';
+export const ENVIRONMENT: Environment = __DEV__ ? 'development' : 'production';
 
 // Logging helper
-export const logAPICall = (
-  endpoint: string,
-  method: string,
-  env: Environment,
-) => {
-  console.log(`[${env.toUpperCase()}] ${method} ${API_BASE_URL}${endpoint}`);
+export const logAPICall = (endpoint: string, method: string) => {
+  console.log(`[${DEVICE_TYPE}] ${method} ${API_BASE_URL}${endpoint}`);
 };

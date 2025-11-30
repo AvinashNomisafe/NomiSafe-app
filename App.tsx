@@ -24,6 +24,7 @@ import SafeVaultScreen from './src/screens/SafeVaultScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import MyPolicyScreen from './src/screens/MyPolicyScreen';
 import InsuranceScreen from './src/screens/InsuranceScreen';
+import PolicyVerificationScreen from './src/screens/PolicyVerificationScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
 import TutorialsScreen from './src/screens/TutorialsScreen';
 import AadhaarVerificationScreen from './src/screens/AadhaarVerificationScreen';
@@ -61,6 +62,10 @@ const Navigation = () => {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="MyPolicy" component={MyPolicyScreen} />
           <Stack.Screen name="Insurance" component={InsuranceScreen} />
+          <Stack.Screen
+            name="PolicyVerification"
+            component={PolicyVerificationScreen}
+          />
           <Stack.Screen name="Properties" component={PropertiesScreen} />
           <Stack.Screen name="Tutorials" component={TutorialsScreen} />
           <Stack.Screen name="Service" component={ServiceScreen} />
