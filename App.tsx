@@ -66,7 +66,10 @@ const Navigation = () => {
           <Stack.Screen name="MyPolicy" component={MyPolicyScreen} />
           <Stack.Screen name="Insurance" component={InsuranceScreen} />
           <Stack.Screen name="LifeInsurance" component={LifeInsuranceScreen} />
-          <Stack.Screen name="HealthInsurance" component={HealthInsuranceScreen} />
+          <Stack.Screen
+            name="HealthInsurance"
+            component={HealthInsuranceScreen}
+          />
           <Stack.Screen
             name="PolicyVerification"
             component={PolicyVerificationScreen}
