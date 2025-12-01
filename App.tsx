@@ -25,6 +25,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import MyPolicyScreen from './src/screens/MyPolicyScreen';
 import InsuranceScreen from './src/screens/InsuranceScreen';
 import PolicyVerificationScreen from './src/screens/PolicyVerificationScreen';
+import PolicyDetailScreen from './src/screens/PolicyDetailScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
 import TutorialsScreen from './src/screens/TutorialsScreen';
 import AadhaarVerificationScreen from './src/screens/AadhaarVerificationScreen';
@@ -66,6 +67,7 @@ const Navigation = () => {
             name="PolicyVerification"
             component={PolicyVerificationScreen}
           />
+          <Stack.Screen name="PolicyDetail" component={PolicyDetailScreen} />
           <Stack.Screen name="Properties" component={PropertiesScreen} />
           <Stack.Screen name="Tutorials" component={TutorialsScreen} />
           <Stack.Screen name="Service" component={ServiceScreen} />

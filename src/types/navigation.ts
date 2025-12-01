@@ -10,6 +10,7 @@ export type RootStackParamList = {
     policyId: number;
     extractedData: ExtractedPolicyData;
   };
+  PolicyDetail: { policyId: number };
   Properties: undefined;
   Tutorials: undefined;
   Service: undefined;

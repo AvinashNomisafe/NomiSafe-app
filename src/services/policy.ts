@@ -10,6 +10,67 @@ export interface Policy {
   uploaded_at: string;
 }
 
+export interface PolicyListItem {
+  id: number;
+  name: string;
+  insurance_type: string;
+  policy_number: string;
+  insurer_name: string;
+  sum_assured: string;
+  premium_amount: string;
+  end_date: string | null;
+  is_expired: boolean;
+  uploaded_at: string;
+}
+
+export interface PolicyListResponse {
+  health: PolicyListItem[];
+  life: PolicyListItem[];
+}
+
+export interface CoveredMember {
+  name: string;
+  relationship: string;
+  date_of_birth: string | null;
+  sum_insured: number | null;
+}
+
+export interface HealthInsuranceDetails {
+  policy_type: string | null;
+  room_rent_limit: number | null;
+  copay_percentage: number | null;
+  deductible_amount: number | null;
+  restoration_benefit: boolean;
+  no_claim_bonus: number | null;
+  waiting_period_days: number | null;
+  covered_members: CoveredMember[];
+}
+
+export interface PolicyBenefit {
+  benefit_name: string;
+  benefit_amount: number | null;
+  description: string | null;
+}
+
+export interface PolicyExclusion {
+  exclusion_type: string;
+  description: string;
+}
+
+export interface PolicyDetail {
+  id: number;
+  name: string;
+  insurance_type: string;
+  policy_number: string;
+  insurer_name: string;
+  uploaded_at: string;
+  coverage: PolicyCoverage;
+  nominees: PolicyNominee[];
+  benefits: PolicyBenefit[];
+  exclusions: PolicyExclusion[];
+  health_details: HealthInsuranceDetails | null;
+}
+
 export interface PolicyNominee {
   name: string;
   relationship: string;
@@ -127,6 +188,28 @@ export const verifyPolicy = async (
     return response.data;
   } catch (error) {
     console.error('Failed to verify policy:', error);
+    throw error;
+  }
+};
+
+export const getPolicies = async (): Promise<PolicyListResponse> => {
+  try {
+    const response = await authApi.get('/policies/');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch policies:', error);
+    throw error;
+  }
+};
+
+export const getPolicyDetail = async (
+  policyId: number,
+): Promise<PolicyDetail> => {
+  try {
+    const response = await authApi.get(`/policies/${policyId}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch policy detail:', error);
     throw error;
   }
 };
