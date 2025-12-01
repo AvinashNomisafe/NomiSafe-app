@@ -186,9 +186,12 @@ export const verifyPolicy = async (
   }
 };
 
-export const getPolicies = async (): Promise<PolicyListResponse> => {
+export const getPolicies = async (
+  insuranceType?: 'LIFE' | 'HEALTH',
+): Promise<PolicyListResponse> => {
   try {
-    const response = await authApi.get('/policies/');
+    const params = insuranceType ? { insurance_type: insuranceType } : {};
+    const response = await authApi.get('/policies/', { params });
     return response.data;
   } catch (error) {
     console.error('Failed to fetch policies:', error);

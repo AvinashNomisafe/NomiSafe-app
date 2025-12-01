@@ -22,15 +22,15 @@ const HomeScreen = () => {
   const menuItems = [
     {
       id: 1,
-      title: 'My Policy',
+      title: 'Life Insurance',
       icon: require('../assets/icons/policy_icon.png'),
-      route: 'MyPolicy' as keyof RootStackParamList,
+      route: 'LifeInsurance' as keyof RootStackParamList,
     },
     {
       id: 2,
-      title: 'Insurance',
+      title: 'Health Insurance',
       icon: require('../assets/icons/insurance_icon.png'),
-      route: 'Insurance' as keyof RootStackParamList,
+      route: 'HealthInsurance' as keyof RootStackParamList,
     },
     {
       id: 3,
