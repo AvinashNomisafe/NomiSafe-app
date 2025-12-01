@@ -21,11 +21,14 @@ export interface PolicyListItem {
   end_date: string | null;
   is_expired: boolean;
   uploaded_at: string;
+  ai_extraction_status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  is_verified_by_user: boolean;
 }
 
 export interface PolicyListResponse {
   health: PolicyListItem[];
   life: PolicyListItem[];
+  unprocessed: PolicyListItem[];
 }
 
 export interface CoveredMember {
@@ -103,8 +106,16 @@ export interface PolicyUploadResponse {
   id: number;
   name: string;
   uploaded_at: string;
-  extracted_data: ExtractedPolicyData;
+  ai_extraction_status: string;
   message: string;
+}
+
+export interface ExtractionStatusResponse {
+  policy_id: number;
+  ai_extraction_status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  ai_extracted_at: string | null;
+  ai_extraction_error: string | null;
+  extracted_data?: ExtractedPolicyData;
 }
 
 export const uploadPolicy = async (
@@ -123,54 +134,37 @@ export const uploadPolicy = async (
       type: document.type || 'application/pdf',
       name: document.name,
     } as any);
-    // Use a dedicated axios instance with extended timeout for large PDF + AI processing
-    const uploadApi = axios.create({
-      baseURL: API_BASE_URL,
-      timeout: UPLOAD_TIMEOUT_MS,
+
+    // Use regular upload timeout now (AI happens in background)
+    const response = await authApi.post('/policies/upload/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    });
-
-    // Copy auth header if present
-    const authHeader = (authApi.defaults.headers as any)?.Authorization;
-    if (authHeader) {
-      uploadApi.defaults.headers.Authorization = authHeader;
-    }
-
-    const startedAt = Date.now();
-    console.log('[Policy Upload] Started', {
-      name,
-      file: document.name,
-      timeout: UPLOAD_TIMEOUT_MS,
-    });
-
-    const response = await uploadApi.post('/policies/upload/', formData, {
-      onUploadProgress: prog => {
-        if (prog.total) {
-          const pct = Math.round((prog.loaded / prog.total) * 100);
-          if (pct % 10 === 0) {
-            console.log(`[Policy Upload] Progress: ${pct}%`);
-          }
-        }
-      },
+      timeout: 60000, // 60 second timeout for upload only
     });
 
     console.log('[Policy Upload] Completed', {
-      elapsedMs: Date.now() - startedAt,
       policyId: response.data?.id,
+      status: response.data?.ai_extraction_status,
     });
 
     return response.data;
   } catch (error) {
     console.error('Failed to upload policy:', error);
-    if (axios.isAxiosError(error)) {
-      if (error.code === 'ECONNABORTED') {
-        throw new Error(
-          'Upload timed out. The file + AI extraction took too long. Consider reducing PDF size or retrying.',
-        );
-      }
-    }
+    throw error;
+  }
+};
+
+export const getExtractionStatus = async (
+  policyId: number,
+): Promise<ExtractionStatusResponse> => {
+  try {
+    const response = await authApi.get(
+      `/policies/${policyId}/extraction-status/`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to get extraction status:', error);
     throw error;
   }
 };

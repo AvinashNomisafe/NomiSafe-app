@@ -16,7 +16,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
-import { uploadPolicy, getPolicies, PolicyListItem } from '../services/policy';
+import {
+  uploadPolicy,
+  getPolicies,
+  getPolicyDetail,
+  getExtractionStatus,
+  PolicyListItem,
+} from '../services/policy';
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 
@@ -30,7 +36,13 @@ const InsuranceScreen: React.FC = () => {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [healthPolicies, setHealthPolicies] = useState<PolicyListItem[]>([]);
   const [lifePolicies, setLifePolicies] = useState<PolicyListItem[]>([]);
+  const [unprocessedPolicies, setUnprocessedPolicies] = useState<
+    PolicyListItem[]
+  >([]);
   const [isLoadingPolicies, setIsLoadingPolicies] = useState(true);
+  const [pollingPolicyIds, setPollingPolicyIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [name, setName] = useState('');
   const [selectedFile, setSelectedFile] = useState<{
     uri: string;
@@ -45,12 +57,49 @@ const InsuranceScreen: React.FC = () => {
       const data = await getPolicies();
       setHealthPolicies(data.health);
       setLifePolicies(data.life);
+      setUnprocessedPolicies(data.unprocessed || []);
+
+      // Start polling for any policies with PENDING or PROCESSING status
+      const needsPolling = (data.unprocessed || []).filter(
+        p =>
+          p.ai_extraction_status === 'PENDING' ||
+          p.ai_extraction_status === 'PROCESSING',
+      );
+      if (needsPolling.length > 0) {
+        const ids = new Set(needsPolling.map(p => p.id));
+        setPollingPolicyIds(ids);
+        startPolling(ids);
+      }
     } catch (error) {
       console.error('Failed to load policies:', error);
       Alert.alert('Error', 'Failed to load policies');
     } finally {
       setIsLoadingPolicies(false);
     }
+  };
+
+  const startPolling = (policyIds: Set<number>) => {
+    policyIds.forEach(id => {
+      const interval = setInterval(async () => {
+        try {
+          const status = await getExtractionStatus(id);
+          if (
+            status.ai_extraction_status === 'COMPLETED' ||
+            status.ai_extraction_status === 'FAILED'
+          ) {
+            clearInterval(interval);
+            setPollingPolicyIds(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(id);
+              return newSet;
+            });
+            loadPolicies(); // Refresh list
+          }
+        } catch (error) {
+          console.error(`Failed to poll status for policy ${id}:`, error);
+        }
+      }, 3000); // Poll every 3 seconds
+    });
   };
 
   useFocusEffect(
@@ -148,16 +197,22 @@ const InsuranceScreen: React.FC = () => {
       setIsLoading(true);
       const response = await uploadPolicy(name, selectedFile);
 
-      // Navigate to verification screen with extracted data
-      navigation.navigate('PolicyVerification', {
-        policyId: response.id,
-        extractedData: response.extracted_data,
-      });
-
-      // Reset form
-      setName('');
-      setSelectedFile(null);
-      setShowUploadForm(false);
+      Alert.alert(
+        'Success',
+        'Policy uploaded! AI is extracting details in the background. You can verify once complete.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Reset form and go back to list
+              setName('');
+              setSelectedFile(null);
+              setShowUploadForm(false);
+              loadPolicies();
+            },
+          },
+        ],
+      );
     } catch (error: any) {
       console.error('Upload error:', error);
       const errorMessage =
@@ -170,10 +225,98 @@ const InsuranceScreen: React.FC = () => {
     }
   };
 
+  const handleVerifyPolicy = async (policy: PolicyListItem) => {
+    if (
+      policy.ai_extraction_status === 'PENDING' ||
+      policy.ai_extraction_status === 'PROCESSING'
+    ) {
+      Alert.alert(
+        'Please wait',
+        'AI is still extracting policy details. This usually takes 1-2 minutes.',
+      );
+      return;
+    }
+
+    if (policy.ai_extraction_status === 'FAILED') {
+      Alert.alert(
+        'Error',
+        'Failed to extract policy details. Please try uploading again.',
+      );
+      return;
+    }
+
+    try {
+      const status = await getExtractionStatus(policy.id);
+      if (status.extracted_data) {
+        navigation.navigate('PolicyVerification', {
+          policyId: policy.id,
+          extractedData: status.extracted_data,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load extracted data');
+    }
+  };
+
   const formatCurrency = (value: string) => {
     const num = parseFloat(value);
     if (isNaN(num)) return value;
     return `₹${num.toLocaleString('en-IN')}`;
+  };
+
+  const renderUnprocessedPolicyCard = (policy: PolicyListItem) => {
+    const isProcessing =
+      policy.ai_extraction_status === 'PENDING' ||
+      policy.ai_extraction_status === 'PROCESSING';
+    const isFailed = policy.ai_extraction_status === 'FAILED';
+    const isCompleted = policy.ai_extraction_status === 'COMPLETED';
+
+    return (
+      <View key={policy.id} style={styles.unprocessedCard}>
+        <View style={styles.policyHeader}>
+          <Text style={styles.policyName}>{policy.name}</Text>
+          {isProcessing && (
+            <View style={styles.processingBadge}>
+              <ActivityIndicator
+                size="small"
+                color="#fff"
+                style={{ marginRight: 4 }}
+              />
+              <Text style={styles.processingText}>Processing...</Text>
+            </View>
+          )}
+          {isFailed && (
+            <View style={styles.failedBadge}>
+              <Text style={styles.failedText}>Failed</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.uploadDate}>
+          Uploaded: {new Date(policy.uploaded_at).toLocaleDateString('en-IN')}
+        </Text>
+
+        {isCompleted && !policy.is_verified_by_user && (
+          <TouchableOpacity
+            style={styles.verifyButton}
+            onPress={() => handleVerifyPolicy(policy)}
+          >
+            <Text style={styles.verifyButtonText}>Verify Details →</Text>
+          </TouchableOpacity>
+        )}
+
+        {isProcessing && (
+          <Text style={styles.statusText}>
+            AI is extracting policy details. This may take 1-2 minutes.
+          </Text>
+        )}
+
+        {isFailed && (
+          <Text style={styles.errorText}>
+            Failed to extract details. Please try uploading again.
+          </Text>
+        )}
+      </View>
+    );
   };
 
   const renderPolicyCard = (policy: PolicyListItem) => {
@@ -298,6 +441,13 @@ const InsuranceScreen: React.FC = () => {
             />
           ) : (
             <>
+              {unprocessedPolicies.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Pending Verification</Text>
+                  {unprocessedPolicies.map(renderUnprocessedPolicyCard)}
+                </View>
+              )}
+
               {healthPolicies.length > 0 && (
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Health Insurance</Text>
@@ -312,15 +462,17 @@ const InsuranceScreen: React.FC = () => {
                 </View>
               )}
 
-              {healthPolicies.length === 0 && lifePolicies.length === 0 && (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyIcon}>📄</Text>
-                  <Text style={styles.emptyText}>No policies yet</Text>
-                  <Text style={styles.emptySubtext}>
-                    Click "Add Policy" to upload your first insurance policy
-                  </Text>
-                </View>
-              )}
+              {healthPolicies.length === 0 &&
+                lifePolicies.length === 0 &&
+                unprocessedPolicies.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyIcon}>📄</Text>
+                    <Text style={styles.emptyText}>No policies yet</Text>
+                    <Text style={styles.emptySubtext}>
+                      Click "Add Policy" to upload your first insurance policy
+                    </Text>
+                  </View>
+                )}
             </>
           )}
         </View>
@@ -369,6 +521,19 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#4DB6AC',
   },
+  unprocessedCard: {
+    backgroundColor: '#FFF9E6',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFA726',
+  },
   expiredCard: {
     borderLeftColor: '#FF6B6B',
     opacity: 0.7,
@@ -385,6 +550,22 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
   },
+  processingBadge: {
+    flexDirection: 'row',
+    backgroundColor: '#FFA726',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  processingText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  failedBadge: {
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  failedText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   expiredBadge: {
     backgroundColor: '#FF6B6B',
     paddingHorizontal: 8,
@@ -392,6 +573,27 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   expiredText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  uploadDate: { fontSize: 14, color: '#666', marginBottom: 12 },
+  verifyButton: {
+    backgroundColor: '#4DB6AC',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  verifyButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  statusText: {
+    fontSize: 13,
+    color: '#FFA726',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#FF6B6B',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
   policyNumber: { fontSize: 14, color: '#666', marginBottom: 4 },
   insurer: { fontSize: 14, color: '#666', marginBottom: 12 },
   policyDetails: {
