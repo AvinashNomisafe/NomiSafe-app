@@ -103,8 +103,14 @@ const PolicyVerificationScreen: React.FC = () => {
         {
           text: 'OK',
           onPress: () => {
-            // Navigate back to Insurance or Home screen
-            navigation.navigate('Insurance');
+            // Navigate back to appropriate insurance screen based on type
+            if (insuranceType === 'LIFE') {
+              navigation.navigate('LifeInsurance');
+            } else if (insuranceType === 'HEALTH') {
+              navigation.navigate('HealthInsurance');
+            } else {
+              navigation.navigate('Home');
+            }
           },
         },
       ]);

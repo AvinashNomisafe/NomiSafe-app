@@ -23,7 +23,6 @@ import ServiceScreen from './src/screens/ServiceScreen';
 import SafeVaultScreen from './src/screens/SafeVaultScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import MyPolicyScreen from './src/screens/MyPolicyScreen';
-import InsuranceScreen from './src/screens/InsuranceScreen';
 import LifeInsuranceScreen from './src/screens/LifeInsuranceScreen';
 import HealthInsuranceScreen from './src/screens/HealthInsuranceScreen';
 import PolicyVerificationScreen from './src/screens/PolicyVerificationScreen';
@@ -64,7 +63,6 @@ const Navigation = () => {
         <>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="MyPolicy" component={MyPolicyScreen} />
-          <Stack.Screen name="Insurance" component={InsuranceScreen} />
           <Stack.Screen name="LifeInsurance" component={LifeInsuranceScreen} />
           <Stack.Screen
             name="HealthInsurance"
