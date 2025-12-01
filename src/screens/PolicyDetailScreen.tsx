@@ -91,13 +91,6 @@ const PolicyDetailScreen: React.FC = () => {
       <AppHeader />
       <ScrollView style={styles.container}>
         <View style={styles.content}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>← Back to Policies</Text>
-          </TouchableOpacity>
-
           <View style={styles.header}>
             <Text style={styles.icon}>
               {policy.insurance_type === 'HEALTH' ? '🏥' : '🛡️'}
