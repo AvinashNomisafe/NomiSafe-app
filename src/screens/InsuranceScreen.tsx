@@ -98,7 +98,7 @@ const InsuranceScreen: React.FC = () => {
         } catch (error) {
           console.error(`Failed to poll status for policy ${id}:`, error);
         }
-      }, 3000); // Poll every 3 seconds
+      }, 30000); // Poll every 30 seconds
     });
   };
 
