@@ -142,67 +142,70 @@ const HomeScreen = () => {
     ];
 
     return (
-      <View style={styles.progressSection}>
-        <View style={styles.progressHeader}>
-          <MaterialCommunityIcons
-            name="check-circle"
-            size={24}
-            color="#4DB6AC"
-          />
-          <Text style={styles.progressTitle}>Getting Started</Text>
-        </View>
-
-        {checklistItems.map((item, index) => (
-          <TouchableOpacity
-            key={item.id}
-            style={[
-              styles.checklistItem,
-              index === checklistItems.length - 1 && styles.checklistItemLast,
-            ]}
-            onPress={item.action}
-            disabled={item.completed}
-          >
-            <View
-              style={[
-                styles.checklistIcon,
-                item.completed
-                  ? styles.checklistIconComplete
-                  : styles.checklistIconIncomplete,
-              ]}
-            >
-              {item.completed && (
-                <MaterialCommunityIcons name="check" size={16} color="#fff" />
-              )}
-            </View>
-            <Text
-              style={[
-                styles.checklistText,
-                item.completed && styles.checklistTextComplete,
-              ]}
-            >
-              {item.text}
-            </Text>
-            {!item.completed && (
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={20}
-                color="#999"
-              />
-            )}
-          </TouchableOpacity>
-        ))}
-
-        <View style={styles.progressBar}>
-          <Text style={styles.progressBarLabel}>
-            {completedSteps} of {totalSteps} steps completed
-          </Text>
-          <View style={styles.progressBarTrack}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${progressPercentage}%` },
-              ]}
+      <View style={styles.checklistBox}>
+        <Text style={styles.checklistTitle}>Pending Tasks</Text>
+        <View style={styles.progressSection}>
+          <View style={styles.progressHeader}>
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={24}
+              color="#4DB6AC"
             />
+            <Text style={styles.progressTitle}>Getting Started</Text>
+          </View>
+
+          {checklistItems.map((item, index) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.checklistItem,
+                index === checklistItems.length - 1 && styles.checklistItemLast,
+              ]}
+              onPress={item.action}
+              disabled={item.completed}
+            >
+              <View
+                style={[
+                  styles.checklistIcon,
+                  item.completed
+                    ? styles.checklistIconComplete
+                    : styles.checklistIconIncomplete,
+                ]}
+              >
+                {item.completed && (
+                  <MaterialCommunityIcons name="check" size={16} color="#fff" />
+                )}
+              </View>
+              <Text
+                style={[
+                  styles.checklistText,
+                  item.completed && styles.checklistTextComplete,
+                ]}
+              >
+                {item.text}
+              </Text>
+              {!item.completed && (
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={20}
+                  color="#999"
+                />
+              )}
+            </TouchableOpacity>
+          ))}
+
+          <View style={styles.progressBar}>
+            <Text style={styles.progressBarLabel}>
+              {completedSteps} of {totalSteps} steps completed
+            </Text>
+            <View style={styles.progressBarTrack}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${progressPercentage}%` },
+                ]}
+              />
+            </View>
           </View>
         </View>
       </View>
@@ -921,6 +924,15 @@ const styles = StyleSheet.create({
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
+  },
+  checklistBox: {
+    marginTop: 16,
+  },
+  checklistTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 12,
   },
   progressSection: {
     backgroundColor: '#fff',
