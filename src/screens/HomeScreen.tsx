@@ -15,7 +15,12 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 import { getProfile, UserProfile } from '../services/profile';
-import { getPolicies, PolicyListResponse } from '../services/policy';
+import {
+  getPolicies,
+  PolicyListResponse,
+  getDashboardStats,
+  DashboardStats,
+} from '../services/policy';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -25,11 +30,21 @@ const HomeScreen = () => {
   const [activeTab, setActiveTab] = useState<'home' | 'dashboard'>('home');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [policyData, setPolicyData] = useState<PolicyListResponse | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null,
+  );
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'dashboard' && !dashboardStats) {
+      loadDashboardData();
+    }
+  }, [activeTab]);
 
   const loadData = async () => {
     try {
@@ -44,6 +59,18 @@ const HomeScreen = () => {
       console.error('Failed to load data:', error);
     } finally {
       setIsLoadingData(false);
+    }
+  };
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoadingDashboard(true);
+      const stats = await getDashboardStats();
+      setDashboardStats(stats);
+    } catch (error) {
+      console.error('Failed to load dashboard stats:', error);
+    } finally {
+      setIsLoadingDashboard(false);
     }
   };
 
@@ -212,22 +239,276 @@ const HomeScreen = () => {
     </>
   );
 
-  const renderDashboard = () => (
-    <View style={styles.dashboardContainer}>
-      <Text style={styles.dashboardTitle}>Dashboard</Text>
-      <Text style={styles.dashboardSubtitle}>
-        Your financial overview and analytics
-      </Text>
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
 
-      <View style={styles.comingSoonContainer}>
-        <Text style={styles.comingSoonIcon}>📊</Text>
-        <Text style={styles.comingSoonText}>Coming Soon</Text>
-        <Text style={styles.comingSoonSubtext}>
-          We're building comprehensive financial analytics and insights for you
-        </Text>
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const renderDashboard = () => {
+    if (isLoadingDashboard) {
+      return (
+        <View style={styles.dashboardContainer}>
+          <Text style={styles.dashboardTitle}>Dashboard</Text>
+          <Text style={styles.dashboardSubtitle}>
+            Your financial overview and analytics
+          </Text>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4DB6AC" />
+            <Text style={styles.loadingText}>Loading your analytics...</Text>
+          </View>
+        </View>
+      );
+    }
+
+    if (!dashboardStats) {
+      return (
+        <View style={styles.dashboardContainer}>
+          <Text style={styles.dashboardTitle}>Dashboard</Text>
+          <Text style={styles.dashboardSubtitle}>
+            Your financial overview and analytics
+          </Text>
+          <View style={styles.emptyStateContainer}>
+            <MaterialCommunityIcons
+              name="chart-box-outline"
+              size={64}
+              color="#ccc"
+            />
+            <Text style={styles.emptyStateText}>No data available</Text>
+          </View>
+        </View>
+      );
+    }
+
+    const {
+      summary,
+      life_insurance,
+      health_insurance,
+      upcoming_renewals,
+      recent_policies,
+    } = dashboardStats;
+
+    return (
+      <View style={styles.dashboardContainer}>
+        {/* Summary Cards */}
+        <View style={styles.summaryGrid}>
+          <View style={[styles.summaryCard, styles.summaryCardPrimary]}>
+            <MaterialCommunityIcons
+              name="shield-account"
+              size={32}
+              color="#fff"
+            />
+            <Text style={styles.summaryCardValue}>
+              {summary.total_policies}
+            </Text>
+            <Text style={styles.summaryCardLabel}>Total Policies</Text>
+          </View>
+          <View style={[styles.summaryCard, styles.summaryCardSecondary]}>
+            <MaterialCommunityIcons
+              name="cash-multiple"
+              size={32}
+              color="#fff"
+            />
+            <Text style={styles.summaryCardValue}>
+              {formatCurrency(summary.total_monthly_premium)}
+            </Text>
+            <Text style={styles.summaryCardLabel}>Monthly Premium</Text>
+          </View>
+        </View>
+
+        {/* Life Insurance Stats */}
+        {life_insurance.total_policies > 0 && (
+          <View style={styles.statsSection}>
+            <View style={styles.statsSectionHeader}>
+              <MaterialCommunityIcons
+                name="heart-pulse"
+                size={24}
+                color="#E91E63"
+              />
+              <Text style={styles.statsSectionTitle}>Life Insurance</Text>
+            </View>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Total Coverage</Text>
+                <Text style={styles.statValue}>
+                  {formatCurrency(life_insurance.total_sum_assured)}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Monthly Premium</Text>
+                <Text style={styles.statValue}>
+                  {formatCurrency(life_insurance.total_premium)}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Active Policies</Text>
+                <Text style={styles.statValue}>
+                  {life_insurance.active_policies}
+                </Text>
+              </View>
+              {life_insurance.total_maturity_amount > 0 && (
+                <View style={styles.statItem}>
+                  <Text style={styles.statLabel}>Maturity Amount</Text>
+                  <Text style={styles.statValue}>
+                    {formatCurrency(life_insurance.total_maturity_amount)}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Health Insurance Stats */}
+        {health_insurance.total_policies > 0 && (
+          <View style={styles.statsSection}>
+            <View style={styles.statsSectionHeader}>
+              <MaterialCommunityIcons
+                name="medical-bag"
+                size={24}
+                color="#4CAF50"
+              />
+              <Text style={styles.statsSectionTitle}>Health Insurance</Text>
+            </View>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Total Coverage</Text>
+                <Text style={styles.statValue}>
+                  {formatCurrency(health_insurance.total_sum_assured)}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Monthly Premium</Text>
+                <Text style={styles.statValue}>
+                  {formatCurrency(health_insurance.total_premium)}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Active Policies</Text>
+                <Text style={styles.statValue}>
+                  {health_insurance.active_policies}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Upcoming Renewals */}
+        {upcoming_renewals.length > 0 && (
+          <View style={styles.renewalsSection}>
+            <View style={styles.renewalsSectionHeader}>
+              <MaterialCommunityIcons
+                name="calendar-clock"
+                size={24}
+                color="#FF9800"
+              />
+              <Text style={styles.renewalsSectionTitle}>Upcoming Renewals</Text>
+            </View>
+            {upcoming_renewals.map(renewal => (
+              <TouchableOpacity
+                key={renewal.id}
+                style={styles.renewalItem}
+                onPress={() =>
+                  navigation.navigate('MyPolicy', { policyId: renewal.id })
+                }
+              >
+                <View style={styles.renewalItemLeft}>
+                  <Text style={styles.renewalItemName}>{renewal.name}</Text>
+                  <Text style={styles.renewalItemInsurer}>
+                    {renewal.insurer_name}
+                  </Text>
+                  <Text style={styles.renewalItemPremium}>
+                    Premium: {formatCurrency(renewal.premium_amount)}
+                  </Text>
+                </View>
+                <View style={styles.renewalItemRight}>
+                  <View
+                    style={[
+                      styles.renewalBadge,
+                      renewal.days_remaining <= 30 && styles.renewalBadgeUrgent,
+                    ]}
+                  >
+                    <Text style={styles.renewalBadgeText}>
+                      {renewal.days_remaining} days
+                    </Text>
+                  </View>
+                  <Text style={styles.renewalItemDate}>
+                    {formatDate(renewal.end_date)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Recent Policies */}
+        {recent_policies.length > 0 && (
+          <View style={styles.recentSection}>
+            <View style={styles.recentSectionHeader}>
+              <MaterialCommunityIcons
+                name="clock-outline"
+                size={24}
+                color="#2196F3"
+              />
+              <Text style={styles.recentSectionTitle}>Recent Policies</Text>
+            </View>
+            {recent_policies.map(policy => (
+              <TouchableOpacity
+                key={policy.id}
+                style={styles.recentItem}
+                onPress={() =>
+                  navigation.navigate('MyPolicy', { policyId: policy.id })
+                }
+              >
+                <View style={styles.recentItemLeft}>
+                  <View
+                    style={[
+                      styles.recentItemIcon,
+                      policy.insurance_type === 'LIFE'
+                        ? styles.recentItemIconLife
+                        : styles.recentItemIconHealth,
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name={
+                        policy.insurance_type === 'LIFE'
+                          ? 'heart-pulse'
+                          : 'medical-bag'
+                      }
+                      size={20}
+                      color="#fff"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.recentItemName}>{policy.name}</Text>
+                    <Text style={styles.recentItemInsurer}>
+                      {policy.insurer_name}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.recentItemRight}>
+                  <Text style={styles.recentItemAmount}>
+                    {formatCurrency(policy.sum_assured)}
+                  </Text>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color="#ccc"
+                  />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -328,7 +609,239 @@ const styles = StyleSheet.create({
   dashboardSubtitle: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 32,
+    marginBottom: 24,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyStateText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#999',
+  },
+  summaryGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  summaryCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  summaryCardPrimary: {
+    backgroundColor: '#4DB6AC',
+  },
+  summaryCardSecondary: {
+    backgroundColor: '#FF9800',
+  },
+  summaryCardValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  summaryCardLabel: {
+    fontSize: 13,
+    color: '#fff',
+    opacity: 0.9,
+  },
+  statsSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  statsSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginLeft: 8,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  statItem: {
+    width: '48%',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 6,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  renewalsSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  renewalsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  renewalsSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginLeft: 8,
+  },
+  renewalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  renewalItemLeft: {
+    flex: 1,
+  },
+  renewalItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 4,
+  },
+  renewalItemInsurer: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  renewalItemPremium: {
+    fontSize: 13,
+    color: '#4DB6AC',
+    fontWeight: '500',
+  },
+  renewalItemRight: {
+    alignItems: 'flex-end',
+  },
+  renewalBadge: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 6,
+  },
+  renewalBadgeUrgent: {
+    backgroundColor: '#FF5722',
+  },
+  renewalBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  renewalItemDate: {
+    fontSize: 13,
+    color: '#666',
+  },
+  recentSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  recentSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  recentSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginLeft: 8,
+  },
+  recentItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  recentItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  recentItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  recentItemIconLife: {
+    backgroundColor: '#E91E63',
+  },
+  recentItemIconHealth: {
+    backgroundColor: '#4CAF50',
+  },
+  recentItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 4,
+  },
+  recentItemInsurer: {
+    fontSize: 14,
+    color: '#666',
+  },
+  recentItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  recentItemAmount: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#4DB6AC',
+    marginRight: 8,
   },
   comingSoonContainer: {
     alignItems: 'center',

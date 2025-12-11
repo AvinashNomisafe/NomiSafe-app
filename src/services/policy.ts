@@ -210,3 +210,62 @@ export const getPolicyDetail = async (
     throw error;
   }
 };
+
+// Dashboard Stats Types
+export interface InsuranceStats {
+  total_policies: number;
+  total_sum_assured: number;
+  total_premium: number;
+  active_policies: number;
+  expired_policies: number;
+  total_maturity_amount: number;
+}
+
+export interface RenewalItem {
+  id: number;
+  name: string;
+  insurance_type: string;
+  insurer_name: string;
+  end_date: string;
+  days_remaining: number;
+  premium_amount: number;
+}
+
+export interface RecentPolicy {
+  id: number;
+  name: string;
+  insurance_type: string;
+  insurer_name: string;
+  uploaded_at: string;
+  sum_assured: number;
+}
+
+export interface ProfileCompletion {
+  completed: number;
+  total: number;
+  percentage: number;
+}
+
+export interface DashboardStats {
+  summary: {
+    total_policies: number;
+    life_insurance_count: number;
+    health_insurance_count: number;
+    total_monthly_premium: number;
+  };
+  life_insurance: InsuranceStats;
+  health_insurance: InsuranceStats;
+  upcoming_renewals: RenewalItem[];
+  recent_policies: RecentPolicy[];
+  profile_completion: ProfileCompletion;
+}
+
+export const getDashboardStats = async (): Promise<DashboardStats> => {
+  try {
+    const response = await authApi.get('/policies/dashboard/');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch dashboard stats:', error);
+    throw error;
+  }
+};

@@ -4,7 +4,7 @@ export type RootStackParamList = {
   PhoneLogin: undefined;
   OTPVerification: { phoneNumber: string };
   Home: undefined;
-  MyPolicy: undefined;
+  MyPolicy: { policyId?: number };
   /** @deprecated Use LifeInsurance or HealthInsurance instead */
   Insurance: undefined;
   LifeInsurance: undefined;
