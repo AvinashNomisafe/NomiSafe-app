@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const [activeTab, setActiveTab] = useState<'home' | 'dashboard'>('home');
 
   const menuItems = [
     {
@@ -65,10 +66,66 @@ const HomeScreen = () => {
     </View>
   );
 
+  const renderDashboard = () => (
+    <View style={styles.dashboardContainer}>
+      <Text style={styles.dashboardTitle}>Dashboard</Text>
+      <Text style={styles.dashboardSubtitle}>
+        Your financial overview and analytics
+      </Text>
+
+      <View style={styles.comingSoonContainer}>
+        <Text style={styles.comingSoonIcon}>📊</Text>
+        <Text style={styles.comingSoonText}>Coming Soon</Text>
+        <Text style={styles.comingSoonSubtext}>
+          We're building comprehensive financial analytics and insights for you
+        </Text>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <AppHeader />
-      <ScrollView style={styles.scrollView}>{renderMenuGrid()}</ScrollView>
+
+      {/* Toggle Buttons */}
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === 'home' && styles.toggleButtonActive,
+          ]}
+          onPress={() => setActiveTab('home')}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              activeTab === 'home' && styles.toggleButtonTextActive,
+            ]}
+          >
+            Home
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === 'dashboard' && styles.toggleButtonActive,
+          ]}
+          onPress={() => setActiveTab('dashboard')}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              activeTab === 'dashboard' && styles.toggleButtonTextActive,
+            ]}
+          >
+            Dashboard
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.scrollView}>
+        {activeTab === 'home' ? renderMenuGrid() : renderDashboard()}
+      </ScrollView>
       <BottomNavigation />
     </SafeAreaView>
   );
@@ -77,10 +134,77 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F9FA',
   },
   scrollView: {
     flex: 1,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  toggleButtonActive: {
+    backgroundColor: '#4DB6AC',
+  },
+  toggleButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  toggleButtonTextActive: {
+    color: '#fff',
+  },
+  dashboardContainer: {
+    padding: 20,
+  },
+  dashboardTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+  },
+  dashboardSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 32,
+  },
+  comingSoonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  comingSoonIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  comingSoonText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4DB6AC',
+    marginBottom: 8,
+  },
+  comingSoonSubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    paddingHorizontal: 40,
+    lineHeight: 20,
   },
   header: {
     flexDirection: 'row',
@@ -107,51 +231,11 @@ const styles = StyleSheet.create({
   iconButton: {
     marginLeft: 16,
   },
-  searchContainer: {
-    padding: 16,
-    backgroundColor: '#4DB6AC',
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    padding: 10,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#4DB6AC',
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#fff',
-  },
-  tabText: {
-    color: '#E0E0E0',
-    fontSize: 16,
-  },
-  activeTabText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
   menuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     padding: 16,
+    backgroundColor: '#fff',
   },
   menuItem: {
     width: '25%',
@@ -170,48 +254,6 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 12,
     textAlign: 'center',
-  },
-  taskContainer: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  taskCard: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    padding: 16,
-  },
-  taskHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  taskCount: {
-    flex: 1,
-  },
-  criticalBadge: {
-    backgroundColor: '#FF5252',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  criticalText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  taskNumber: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  taskList: {
-    marginTop: 8,
-  },
-  taskItem: {
-    marginBottom: 8,
   },
 });
 
