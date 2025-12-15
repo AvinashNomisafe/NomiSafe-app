@@ -123,7 +123,7 @@ const HomeScreen = () => {
     const checklistItems = [
       {
         id: 1,
-        text: 'Complete your profile (Name, Email, DOB)',
+        text: 'Complete your profile',
         completed: isProfileComplete,
         action: () => navigation.navigate('Profile'),
       },
