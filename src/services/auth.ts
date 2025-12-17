@@ -162,16 +162,29 @@ export const createAuthenticatedApi = (accessToken: string) => {
 
 export const sendOTP = async (phoneNumber: string): Promise<boolean> => {
   try {
+    console.log('[OTP Request] Starting...', {
+      phoneNumber,
+      url: `${API_BASE_URL}/auth/otp/request/`,
+      fullURL: `${API_BASE_URL}/auth/otp/request/`,
+    });
+
     const response = await publicApi.post<OTPRequestResponse>(
       '/auth/otp/request/',
       {
         phone_number: phoneNumber,
       },
     );
+
+    console.log('[OTP Request] Success', response.status);
     return response.status === 202;
   } catch (error) {
     console.error('Failed to send OTP:', error);
     if (axios.isAxiosError(error)) {
+      console.error('[OTP Request] Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
       throw new Error(error.response?.data?.detail || 'Failed to send OTP');
     }
     throw error;

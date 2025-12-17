@@ -26,16 +26,15 @@ import {
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 
-type InsuranceScreenNavigationProp = NativeStackNavigationProp<
+type HealthInsuranceScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'Insurance'
+  'HealthInsurance'
 >;
 
-const InsuranceScreen: React.FC = () => {
-  const navigation = useNavigation<InsuranceScreenNavigationProp>();
+const HealthInsuranceScreen: React.FC = () => {
+  const navigation = useNavigation<HealthInsuranceScreenNavigationProp>();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [healthPolicies, setHealthPolicies] = useState<PolicyListItem[]>([]);
-  const [lifePolicies, setLifePolicies] = useState<PolicyListItem[]>([]);
   const [unprocessedPolicies, setUnprocessedPolicies] = useState<
     PolicyListItem[]
   >([]);
@@ -54,9 +53,8 @@ const InsuranceScreen: React.FC = () => {
   const loadPolicies = async () => {
     try {
       setIsLoadingPolicies(true);
-      const data = await getPolicies();
+      const data = await getPolicies('HEALTH');
       setHealthPolicies(data.health);
-      setLifePolicies(data.life);
       setUnprocessedPolicies(data.unprocessed || []);
 
       // Start polling for any policies with PENDING or PROCESSING status
@@ -118,7 +116,6 @@ const InsuranceScreen: React.FC = () => {
       return;
     }
 
-    // Use only our SAF-based native module (no fallback needed)
     const nativeModule = (NativeModules as any).FilePickerModule;
 
     if (!nativeModule) {
@@ -131,13 +128,11 @@ const InsuranceScreen: React.FC = () => {
 
     try {
       if (typeof nativeModule?.showFilePicker === 'function') {
-        // Promise-based API (our SAF module)
         const options = { title: 'Select PDF' };
         (nativeModule.showFilePicker(options) as Promise<any>)
           .then((response: any) => {
             if (!response) return;
             if (response.didCancel) return;
-            // Our Kotlin module returns fileName, uri, type, size
             const uri = response.uri;
             const name = response.fileName || (uri && uri.split('/').pop());
             const type = response.type || 'application/pdf';
@@ -204,7 +199,6 @@ const InsuranceScreen: React.FC = () => {
           {
             text: 'OK',
             onPress: () => {
-              // Reset form and go back to list
               setName('');
               setSelectedFile(null);
               setShowUploadForm(false);
@@ -377,7 +371,7 @@ const InsuranceScreen: React.FC = () => {
             </TouchableOpacity>
 
             <Text style={styles.icon}>🏥</Text>
-            <Text style={styles.pageTitle}>Upload Policy</Text>
+            <Text style={styles.pageTitle}>Upload Health Insurance</Text>
 
             <View style={styles.form}>
               <Text style={styles.label}>Insurance Name</Text>
@@ -424,7 +418,7 @@ const InsuranceScreen: React.FC = () => {
       <ScrollView style={styles.container}>
         <View style={styles.content}>
           <Text style={styles.icon}>🏥</Text>
-          <Text style={styles.pageTitle}>Insurance Policies</Text>
+          <Text style={styles.pageTitle}>Health Insurance</Text>
 
           <TouchableOpacity
             style={styles.addButton}
@@ -450,26 +444,21 @@ const InsuranceScreen: React.FC = () => {
 
               {healthPolicies.length > 0 && (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Health Insurance</Text>
+                  <Text style={styles.sectionTitle}>Active Policies</Text>
                   {healthPolicies.map(renderPolicyCard)}
                 </View>
               )}
 
-              {lifePolicies.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Life Insurance</Text>
-                  {lifePolicies.map(renderPolicyCard)}
-                </View>
-              )}
-
               {healthPolicies.length === 0 &&
-                lifePolicies.length === 0 &&
                 unprocessedPolicies.length === 0 && (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyIcon}>📄</Text>
-                    <Text style={styles.emptyText}>No policies yet</Text>
+                    <Text style={styles.emptyText}>
+                      No health insurance policies yet
+                    </Text>
                     <Text style={styles.emptySubtext}>
-                      Click "Add Policy" to upload your first insurance policy
+                      Click "Add Policy" to upload your first health insurance
+                      policy
                     </Text>
                   </View>
                 )}
@@ -666,4 +655,4 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 
-export default InsuranceScreen;
+export default HealthInsuranceScreen;

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import SideMenu from './SideMenu';
 
 interface AppHeaderProps {
   showBackButton?: boolean;
@@ -15,6 +16,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   showMenu = false,
 }) => {
   const insets = useSafeAreaInsets();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // Try to get navigation, but don't fail if not available
   let navigation: any = null;
@@ -25,9 +27,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   }
 
   const handleMenuPress = () => {
-    if (navigation && typeof navigation.toggleDrawer === 'function') {
-      navigation.toggleDrawer();
-    }
+    setMenuVisible(true);
   };
 
   const handleBackPress = () => {
@@ -38,6 +38,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   return (
     <>
+      <SideMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
       {/* Safe area top background */}
       <View style={[styles.safeAreaTop, { height: insets.top }]} />
 
