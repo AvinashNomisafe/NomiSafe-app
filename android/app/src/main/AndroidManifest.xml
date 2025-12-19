@@ -1,12 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Shake-to-alert permissions -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <!-- Android 13+ notification permission (declared; requested at runtime) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
       android:name=".MainApplication"
@@ -33,15 +26,6 @@
       <receiver
         android:name=".AlertActionReceiver"
         android:exported="false" />
-      <!-- Boot receiver to restart shake detection service -->
-      <receiver
-        android:name=".BootReceiver"
-        android:exported="true"
-        android:enabled="true">
-        <intent-filter>
-          <action android:name="android.intent.action.BOOT_COMPLETED" />
-        </intent-filter>
-      </receiver>
       <!-- Alert activity shown over lock screen via full-screen intent -->
       <activity
         android:name=".AlertActivity"
@@ -50,13 +34,5 @@
         android:turnScreenOn="true"
         android:excludeFromRecents="true"
         android:taskAffinity="" />
-            <service
-        android:name=".ShakeDetectionService"
-        android:exported="false"
-        android:foregroundServiceType="specialUse">
-        <property
-          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-          android:value="Emergency shake alert detection" />
-      </service>
     </application>
 </manifest>

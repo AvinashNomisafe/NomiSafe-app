@@ -18,7 +18,6 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // Manual packages
               add(FilePickerPackage())
-              add(ShakeServicePackage())
             }
 
         override fun getJSMainModuleName(): String = "index"
