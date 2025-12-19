@@ -14,6 +14,7 @@ import { RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
+import ImageCarousel from '../components/ImageCarousel';
 import { getProfile, UserProfile } from '../services/profile';
 import {
   getPolicies,
@@ -239,6 +240,7 @@ const HomeScreen = () => {
           renderProgressChecklist()
         )}
       </View>
+      <ImageCarousel />
     </>
   );
 
