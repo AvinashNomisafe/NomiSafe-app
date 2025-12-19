@@ -18,6 +18,7 @@ import { RootStackParamList } from '../types/navigation';
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 import { getProfile, updateProfile, UserProfile } from '../services/profile';
+import { deleteAccount } from '../services/auth';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type ProfileScreenProps = {
@@ -197,8 +198,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     alignSelf: 'center',
-    marginTop: 30,
-    marginBottom: 40,
+    marginTop: 20,
     minWidth: 200,
   },
   logoutButtonText: {
@@ -296,6 +296,33 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     if (selectedDate) {
       setDateOfBirth(selectedDate);
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              Alert.alert('Account Deleted', 'Your account has been deleted.');
+              await logout();
+              navigation.replace('PhoneLogin');
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                'Failed to delete account. Please try again.',
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleLogout = () => {
@@ -500,9 +527,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.logoutButton, { marginBottom: 200 }]}
+              onPress={handleDeleteAccount}
+            >
+              <Text style={styles.logoutButtonText}>Delete Account</Text>
+            </TouchableOpacity>
+          </>
         )}
       </ScrollView>
       <BottomNavigation />

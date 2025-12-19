@@ -1,3 +1,13 @@
+// Delete account API call
+export const deleteAccount = async (): Promise<void> => {
+  try {
+    await authApi.delete('/delete-account/');
+    await clearAuthData();
+  } catch (error) {
+    console.error('Failed to delete account:', error);
+    throw new Error('Failed to delete account.');
+  }
+};
 import axios from 'axios';
 import { OTPRequestResponse, OTPVerifyResponse } from '../types/auth';
 import {
