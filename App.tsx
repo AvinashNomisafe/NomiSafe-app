@@ -91,24 +91,43 @@ const Navigation = () => {
 function App() {
   useEffect(() => {
     const init = async () => {
+      console.log('[FallDetection] Starting initialization...');
+      
       if (Platform.OS === 'android') {
         try {
-          console.log('[ShakeService] Starting initialization...');
-          if (Platform.Version >= 33) {
-            const result = await PermissionsAndroid.request(
-              'android.permission.POST_NOTIFICATIONS',
-            );
-            console.log('[ShakeService] Notification permission:', result);
+          // Request necessary permissions
+          const permissions = [
+            'android.permission.POST_NOTIFICATIONS',
+            'android.permission.VIBRATE',
+            'android.permission.WAKE_LOCK',
+          ];
+          
+          for (const permission of permissions) {
+            if (Platform.Version >= 33 || permission !== 'android.permission.POST_NOTIFICATIONS') {
+              const result = await PermissionsAndroid.request(permission as any);
+              console.log(`[FallDetection] ${permission}: ${result}`);
+            }
           }
-          console.log('[ShakeService] About to start service...');
+          
+          console.log('[FallDetection] Starting fall detection service...');
           NativeModules.ShakeServiceModule?.startService();
-          console.log('[ShakeService] Service start called');
+          console.log('[FallDetection] Service started successfully');
         } catch (e) {
-          console.log('Shake service init failed', e);
+          console.log('Fall detection service init failed', e);
         }
+      } else if (Platform.OS === 'ios') {
+        // For iOS, we'll need to implement a native module
+        console.log('[FallDetection] iOS fall detection setup would go here');
+        // NativeModules.FallDetectionModule?.startDetection();
       }
     };
-    init();
+    
+    // Start with a slight delay to ensure app is ready
+    const timer = setTimeout(() => {
+      init();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, []);
   return (
     <Provider store={store}>

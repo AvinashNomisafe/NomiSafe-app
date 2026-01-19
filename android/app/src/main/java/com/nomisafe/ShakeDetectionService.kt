@@ -21,10 +21,13 @@ class ShakeDetectionService : Service(), SensorEventListener {
   private lateinit var sensorManager: SensorManager
   private var accelerometer: Sensor? = null
 
-  // Simple shake detection variables
-  private var lastShakeTimestamp: Long = 0L
+  // Fall detection variables
+  private var lastFallTimestamp: Long = 0L
   private var lastAlertTimestamp: Long = 0L
-  private var shakeCount: Int = 0
+  private var fallCount: Int = 0
+  private val gravity = FloatArray(3)
+  private val linearAcceleration = FloatArray(3)
+  private val alpha: Float = 0.8f
 
   private val TAG = "ShakeService"
   private val FOREGROUND_CHANNEL_ID = "shake_service_channel"
@@ -161,31 +164,54 @@ class ShakeDetectionService : Service(), SensorEventListener {
 
   override fun onSensorChanged(event: SensorEvent?) {
     if (event?.sensor?.type != Sensor.TYPE_ACCELEROMETER) return
-    val x = event.values[0]
-    val y = event.values[1]
-    val z = event.values[2]
-    val gForce = sqrt(x * x + y * y + z * z)
-    val threshold = 12f // Sensitive enough for accident/fall detection
-
+    
+    // Apply low-pass filter to isolate gravity
+    gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0]
+    gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1]
+    gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2]
+    
+    // Remove gravity contribution to get linear acceleration
+    linearAcceleration[0] = event.values[0] - gravity[0]
+    linearAcceleration[1] = event.values[1] - gravity[1]
+    linearAcceleration[2] = event.values[2] - gravity[2]
+    
+    val magnitude = sqrt(
+        linearAcceleration[0] * linearAcceleration[0] +
+        linearAcceleration[1] * linearAcceleration[1] +
+        linearAcceleration[2] * linearAcceleration[2]
+    )
+    
     val now = System.currentTimeMillis()
-    // Only log occasionally to reduce spam
-    if (now - lastShakeTimestamp > 2000) {
-      Log.d(TAG, "Sensor: x=$x, y=$y, z=$z, gForce=$gForce, threshold=$threshold")
+    
+    // Log occasionally to reduce spam
+    if (now - lastFallTimestamp > 2000) {
+        Log.d(TAG, "Linear acceleration magnitude: $magnitude")
     }
     
-    if (gForce > threshold) {
-      Log.d(TAG, "Shake detected! gForce=$gForce, shakeCount=$shakeCount")
-      // Count shakes within window
-      if (now - lastShakeTimestamp > 2000) {
-        shakeCount = 0
-      }
-      shakeCount++
-      if (shakeCount >= 10) {  // Require 3 rapid shakes
-        Log.d(TAG, "Threshold met! Triggering alert.")
-        shakeCount = 0
-        triggerAlert()
-      }
-      lastShakeTimestamp = now
+    // Fall detection logic
+    // A fall is characterized by a sudden spike in linear acceleration followed by a period of low movement
+    if (magnitude > 15f) { // High acceleration threshold for impact
+        Log.d(TAG, "High impact detected! magnitude=$magnitude")
+        if (now - lastFallTimestamp > 1000) { // Reset if last detection was more than 1 second ago
+            fallCount = 0
+        }
+        fallCount++
+        lastFallTimestamp = now
+        
+        // Check for subsequent low movement (person may be on ground)
+        // We'll use a delayed check
+        android.os.Handler(mainLooper).postDelayed({
+            // Check current acceleration after 1 second
+            val currentMagnitude = sqrt(
+                linearAcceleration[0] * linearAcceleration[0] +
+                linearAcceleration[1] * linearAcceleration[1] +
+                linearAcceleration[2] * linearAcceleration[2]
+            )
+            if (currentMagnitude < 2f) { // Very low movement
+                Log.d(TAG, "Low movement after impact - possible fall detected!")
+                triggerAlert()
+            }
+        }, 1000)
     }
   }
 

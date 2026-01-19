@@ -100,6 +100,12 @@ const HomeScreen = () => {
       icon: require('../assets/icons/tutorials_icon.png'),
       route: 'Tutorials' as keyof RootStackParamList,
     },
+    {
+      id: 5,
+      title: 'Fall Detection',
+      icon: require('../assets/icons/fall_detection_icon.png'),
+      route: 'FallDetection' as keyof RootStackParamList,
+    },
   ];
 
   const renderProgressChecklist = () => {
