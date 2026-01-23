@@ -1,11 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SENSORS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Required for foreground health service on Android 13+ -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
 
     <application
       android:name=".MainApplication"
@@ -32,20 +37,29 @@
       <receiver
         android:name=".AlertActionReceiver"
         android:exported="false" />
-      <!-- Alert activity shown over lock screen via full-screen intent -->
-      <activity
-        android:name=".AlertActivity"
+      <receiver
+        android:name=".BootReceiver"
+        android:enabled="true"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="android.intent.action.BOOT_COMPLETED" />
+        </intent-filter>
+      </receiver>
+
+      <!-- SOS Cancel action receiver for notification -->
+      <receiver
+        android:name="com.nomisafe.falldetection.SOSCancelReceiver"
         android:exported="false"
-        android:showOnLockScreen="true"
-        android:turnScreenOn="true"
-        android:excludeFromRecents="true"
-        android:taskAffinity=""
-        android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
-      
+        android:enabled="true">
+        <intent-filter>
+          <action android:name="com.nomisafe.falldetection.ACTION_CANCEL_SOS" />
+        </intent-filter>
+      </receiver>
       <!-- Fall detection service -->
       <service
-        android:name=".ShakeDetectionService"
-        android:foregroundServiceType="connectedDevice|location|dataSync"
-        android:exported="false" />
+        android:name="com.nomisafe.falldetection.FallDetectionService"
+        android:enabled="true"
+        android:exported="false"
+        android:foregroundServiceType="health" />
     </application>
 </manifest>

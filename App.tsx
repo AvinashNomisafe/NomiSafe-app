@@ -92,7 +92,7 @@ function App() {
   useEffect(() => {
     const init = async () => {
       console.log('[FallDetection] Starting initialization...');
-      
+
       if (Platform.OS === 'android') {
         try {
           // Request necessary permissions
@@ -100,17 +100,24 @@ function App() {
             'android.permission.POST_NOTIFICATIONS',
             'android.permission.VIBRATE',
             'android.permission.WAKE_LOCK',
+            'android.permission.ACTIVITY_RECOGNITION',
+            'android.permission.HIGH_SAMPLING_RATE_SENSORS',
           ];
-          
+
           for (const permission of permissions) {
-            if (Platform.Version >= 33 || permission !== 'android.permission.POST_NOTIFICATIONS') {
-              const result = await PermissionsAndroid.request(permission as any);
+            if (
+              Platform.Version >= 33 ||
+              permission !== 'android.permission.POST_NOTIFICATIONS'
+            ) {
+              const result = await PermissionsAndroid.request(
+                permission as any,
+              );
               console.log(`[FallDetection] ${permission}: ${result}`);
             }
           }
-          
+
           console.log('[FallDetection] Starting fall detection service...');
-          NativeModules.ShakeServiceModule?.startService();
+          NativeModules.FallDetectionModule?.startService();
           console.log('[FallDetection] Service started successfully');
         } catch (e) {
           console.log('Fall detection service init failed', e);
@@ -121,12 +128,12 @@ function App() {
         // NativeModules.FallDetectionModule?.startDetection();
       }
     };
-    
+
     // Start with a slight delay to ensure app is ready
     const timer = setTimeout(() => {
       init();
     }, 1000);
-    
+
     return () => clearTimeout(timer);
   }, []);
   return (

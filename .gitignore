@@ -125,3 +125,4 @@ web-build/
 *.swp
 *.swo
 *~
+.aider*
