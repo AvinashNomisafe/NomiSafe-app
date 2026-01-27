@@ -17,6 +17,7 @@ import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import PhoneLoginScreen from './src/screens/PhoneLoginScreen';
 import OTPVerificationScreen from './src/screens/OTPVerificationScreen';
 import { RootStackParamList } from './src/types/navigation';
+import FallDetectionPopup from './src/components/FallDetectionPopup';
 
 import HomeScreen from './src/screens/HomeScreen';
 import ServiceScreen from './src/screens/ServiceScreen';
@@ -117,7 +118,7 @@ function App() {
           }
 
           console.log('[FallDetection] Starting fall detection service...');
-          NativeModules.FallDetectionModule?.startService();
+          // NativeModules.FallDetectionModule?.startService();
           console.log('[FallDetection] Service started successfully');
         } catch (e) {
           console.log('Fall detection service init failed', e);
@@ -143,6 +144,8 @@ function App() {
           <NavigationContainer>
             <Navigation />
           </NavigationContainer>
+          {/* Fall Detection Full-Screen Popup - appears above all screens */}
+          <FallDetectionPopup />
         </SafeAreaProvider>
       </AuthProvider>
     </Provider>

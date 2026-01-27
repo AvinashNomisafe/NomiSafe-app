@@ -55,6 +55,19 @@
           <action android:name="com.nomisafe.falldetection.ACTION_CANCEL_SOS" />
         </intent-filter>
       </receiver>
+      
+      <!-- Full-screen SOS Alert Activity - shows over lock screen -->
+      <activity
+        android:name="com.nomisafe.falldetection.SOSAlertActivity"
+        android:exported="false"
+        android:launchMode="singleTop"
+        android:excludeFromRecents="true"
+        android:taskAffinity=""
+        android:showOnLockScreen="true"
+        android:turnScreenOn="true"
+        android:showWhenLocked="true"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+        
       <!-- Fall detection service -->
       <service
         android:name="com.nomisafe.falldetection.FallDetectionService"

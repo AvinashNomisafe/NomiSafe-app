@@ -9,3 +9,8 @@ npx react-native start
 
 3# in a new terminal (from project root)
 npx react-native run-android
+
+
+to start the fall detection just uncomment 
+          // NativeModules.FallDetectionModule?.startService();
+ in App.tsx
