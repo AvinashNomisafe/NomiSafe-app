@@ -24,7 +24,7 @@ import androidx.annotation.Nullable;
 
 public class FallDetectionService extends Service implements SensorEventListener {
         public static final String ACTION_CANCEL_SOS = "com.nomisafe.falldetection.ACTION_CANCEL_SOS";
-        private boolean sosCancelled = false;
+        public static volatile boolean sosCancelled = false;
         private Handler sosHandler = new Handler();
         private Runnable sosTimeoutRunnable;
         private BroadcastReceiver sosCancelReceiver;
@@ -110,6 +110,7 @@ public class FallDetectionService extends Service implements SensorEventListener
                     android.util.Log.i("NomiSafeDebug", "FALL DETECTED! Acceleration=" + acceleration);
                     lastFallTime = now;
                     sosCancelled = false;
+                    sosHandler.removeCallbacksAndMessages(null); // Stop any previous progress/timer
                     // Play a loud alert sound
                     try {
                         ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
@@ -140,12 +141,13 @@ public class FallDetectionService extends Service implements SensorEventListener
                         android.util.Log.i("NomiSafeDebug", "SOS notification with progress bar sent");
                     }
                     // Progress updater
-                    sosHandler.post(new Runnable() {
+                    Runnable progressRunnable = new Runnable() {
                         int progress = 0;
                         @Override
                         public void run() {
                             if (sosCancelled) {
                                 if (manager != null) manager.cancel(notificationId);
+                                sosHandler.removeCallbacks(this);
                                 return;
                             }
                             if (progress < totalSeconds) {
@@ -166,7 +168,8 @@ public class FallDetectionService extends Service implements SensorEventListener
                                 if (manager != null) manager.notify(3, sentBuilder.build());
                             }
                         }
-                    });
+                    };
+                    sosHandler.post(progressRunnable);
                 }
             }
         }

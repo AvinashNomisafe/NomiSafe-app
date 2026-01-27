@@ -11,11 +11,11 @@ public class SOSCancelReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i("NomiSafeDebug", "SOSCancelReceiver triggered. Action: " + intent.getAction());
+        // Set the cancel flag in FallDetectionService
+        FallDetectionService.sosCancelled = true;
         // Cancel the notification
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) manager.cancel(2);
-        // Optionally, notify the service (e.g., via shared preferences, or a local broadcast)
-        // For now, just log
         Log.i("NomiSafeDebug", "SOS Cancelled by user (manifest receiver)");
     }
 }
