@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -39,11 +40,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <>
       <SideMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
-      {/* Safe area top background */}
-      <View style={[styles.safeAreaTop, { height: insets.top }]} />
-
-      {/* Main Header */}
-      <View style={styles.header}>
+      {/* Header with gradient - includes safe area */}
+      <LinearGradient
+        colors={['#139DA4', '#5DBFC4', '#A8E2E5']}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: insets.top }]}
+      >
         {/* Left Section - Menu or Back Button */}
         <View style={styles.leftSection}>
           <TouchableOpacity style={styles.iconButton} onPress={handleMenuPress}>
@@ -78,7 +81,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
     </>
   );
 };
@@ -91,11 +94,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#4DB6AC',
+    // backgroundColor: '#4DB6AC', // replaced by gradient
     paddingHorizontal: 12,
     paddingVertical: 10,
     elevation: 0,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
