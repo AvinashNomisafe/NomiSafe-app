@@ -10,13 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import { getPolicyDetail, PolicyDetail } from '../services/policy';
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 
-type PolicyDetailScreenNavigationProp = NativeStackNavigationProp<
+type PolicyDetailScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'PolicyDetail'
 >;

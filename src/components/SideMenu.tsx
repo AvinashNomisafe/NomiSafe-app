@@ -104,7 +104,7 @@ const SideMenu: React.FC<SideMenuProps> = ({ visible, onClose }) => {
   const handleNavigation = (route: keyof RootStackParamList) => {
     onClose();
     setTimeout(() => {
-      navigation.navigate(route);
+      navigation.navigate(route as any);
     }, 200);
   };
 

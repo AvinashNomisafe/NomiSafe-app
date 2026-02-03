@@ -31,6 +31,7 @@ import PolicyDetailScreen from './src/screens/PolicyDetailScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
 import TutorialsScreen from './src/screens/TutorialsScreen';
 import AadhaarVerificationScreen from './src/screens/AadhaarVerificationScreen';
+import DashboardScreen from './src/screens/DashboardScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -63,6 +64,7 @@ const Navigation = () => {
       ) : (
         <>
           <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Dashboard" component={DashboardScreen} />
           <Stack.Screen name="MyPolicy" component={MyPolicyScreen} />
           <Stack.Screen name="LifeInsurance" component={LifeInsuranceScreen} />
           <Stack.Screen

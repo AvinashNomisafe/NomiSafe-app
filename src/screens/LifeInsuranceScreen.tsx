@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
 import {
   uploadPolicy,
@@ -26,7 +26,7 @@ import {
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
 
-type LifeInsuranceScreenNavigationProp = NativeStackNavigationProp<
+type LifeInsuranceScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'LifeInsurance'
 >;
