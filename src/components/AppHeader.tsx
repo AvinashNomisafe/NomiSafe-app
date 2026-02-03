@@ -12,10 +12,7 @@ interface AppHeaderProps {
   showMenu?: boolean;
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({
-  showBackButton = true,
-  showMenu = false,
-}) => {
+const AppHeader: React.FC<AppHeaderProps> = () => {
   const insets = useSafeAreaInsets();
   const [menuVisible, setMenuVisible] = useState(false);
 
