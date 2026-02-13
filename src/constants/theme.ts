@@ -20,6 +20,8 @@ export const colors = {
     light: '#f5f5f5',
     grey: '#F0F0F0',
     darkGrey: '#E0E0E0',
+    main: '#139DA4',
+    white: '#ffffff',
   },
   // Text colors
   text: {

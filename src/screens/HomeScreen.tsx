@@ -15,6 +15,7 @@ import {
   MenuGrid,
   ProgressChecklist,
 } from '../components/reusable';
+import HeroSection from '../components/HeroSection';
 
 // Services
 import { getProfile, UserProfile } from '../services/profile';
@@ -34,26 +35,26 @@ const TABS = [
 const MENU_ITEMS = [
   {
     id: 1,
-    title: 'Life Insurance',
-    icon: require('../assets/icons/policy_icon.png'),
+    title: 'My Policy',
+    icon: require('../assets/icons/myPolicyIcon.png'),
     route: 'LifeInsurance',
   },
   {
     id: 2,
-    title: 'Health Insurance',
-    icon: require('../assets/icons/insurance_icon.png'),
+    title: 'Nominees',
+    icon: require('../assets/icons/nomineesIcon.png'),
     route: 'HealthInsurance',
   },
   {
     id: 3,
     title: 'Properties',
-    icon: require('../assets/icons/properties_icon.png'),
+    icon: require('../assets/icons/propertiesIcon.png'),
     route: 'Properties',
   },
   {
     id: 4,
-    title: 'Tutorials',
-    icon: require('../assets/icons/tutorials_icon.png'),
+    title: 'First Connect',
+    icon: require('../assets/icons/firstConnectIcon.png'),
     route: 'Tutorials',
   },
 ];
@@ -91,8 +92,6 @@ const HomeScreen = () => {
       setIsLoadingData(false);
     }
   };
-
-  // Dashboard logic removed; handled in DashboardScreen
 
   // Build checklist items based on profile and policy data
   const getChecklistItems = () => {
@@ -160,13 +159,22 @@ const HomeScreen = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <AppHeader />
 
-      <TabToggle
-        tabs={TABS}
-        activeTab={activeTab}
-        onChange={value => setActiveTab(value as 'home' | 'dashboard')}
-      />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <HeroSection />
 
-      <ScrollView style={styles.scrollView}>{renderHomeContent()}</ScrollView>
+        <View style={styles.contentWrapper}>
+          <TabToggle
+            tabs={TABS}
+            activeTab={activeTab}
+            onChange={value => setActiveTab(value as 'home' | 'dashboard')}
+          />
+
+          {renderHomeContent()}
+        </View>
+      </ScrollView>
 
       <BottomNavigation />
     </SafeAreaView>
@@ -176,10 +184,16 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.default,
+    backgroundColor: colors.background.white,
   },
   scrollView: {
     flex: 1,
+  },
+  contentWrapper: {
+    marginTop: -40,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: colors.background.white,
   },
   checklistContainer: {
     paddingHorizontal: spacing.lg,
