@@ -18,6 +18,7 @@ import {
 import HeroSection from '../components/HeroSection';
 import FirstConnectCTA from '../components/FirstConnectCTA';
 import AddDocumentsSection from '../components/AddDocumentsSection';
+import VideoSection from '../components/VideoSection';
 
 // Services
 import { getProfile, UserProfile } from '../services/profile';
@@ -164,7 +165,7 @@ const HomeScreen = () => {
         onItemPress={item => navigation.navigate(item.route)}
       />
 
-      <View style={styles.checklistContainer}>
+      {/* <View style={styles.checklistContainer}>
         {isLoadingData ? (
           <LoadingSpinner />
         ) : (
@@ -173,9 +174,11 @@ const HomeScreen = () => {
             onItemPress={handleChecklistItemPress}
           />
         )}
-      </View>
+      </View> */}
 
-      <ImageCarousel />
+      {/* <ImageCarousel /> */}
+
+      <VideoSection />
     </>
   );
 

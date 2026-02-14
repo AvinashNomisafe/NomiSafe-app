@@ -32,14 +32,19 @@ const DEFAULT_ITEMS: DocumentItem[] = [
     icon: require('../assets/icons/lifeInsuranceIcon.png'),
   },
   {
-    id: 4,
+    id: 3,
     title: 'Car\nInsurance',
     icon: require('../assets/icons/carInsuranceIcon.png'),
   },
   {
-    id: 5,
+    id: 4,
     title: 'Properties',
     icon: require('../assets/icons/propertiesIconNew.png'),
+  },
+  {
+    id: 5,
+    title: 'Tutorials',
+    icon: require('../assets/icons/tutorialsIconNew.png'),
   },
 ];
 
