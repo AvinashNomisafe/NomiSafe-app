@@ -38,6 +38,7 @@ const DEFAULT_ITEMS: DocumentItem[] = [
     id: 3,
     title: 'Car\nInsurance',
     icon: require('../assets/icons/carInsuranceIcon.png'),
+    route: 'MotorInsurance',
   },
   {
     id: 4,

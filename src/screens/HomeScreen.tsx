@@ -121,7 +121,7 @@ const HomeScreen = () => {
         <Text style={{ color: '#139DA4' }}>Nomisafe</Text>.
       </Text>
 
-      <FirstConnectCTA onAddPress={() => navigation.navigate('/')} />
+      <FirstConnectCTA onAddPress={() => navigation.navigate('FirstConnect')} />
 
       <AddDocumentsSection onItemPress={handleDocumentItemPress} />
 

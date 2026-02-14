@@ -108,6 +108,8 @@ const PolicyVerificationScreen: React.FC = () => {
               navigation.navigate('LifeInsurance');
             } else if (insuranceType === 'HEALTH') {
               navigation.navigate('HealthInsurance');
+            } else if (insuranceType === 'MOTOR') {
+              navigation.navigate('MotorInsurance');
             } else {
               navigation.navigate('Home');
             }

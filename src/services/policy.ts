@@ -28,6 +28,7 @@ export interface PolicyListItem {
 export interface PolicyListResponse {
   health: PolicyListItem[];
   life: PolicyListItem[];
+  motor: PolicyListItem[];
   unprocessed: PolicyListItem[];
 }
 
@@ -187,7 +188,7 @@ export const verifyPolicy = async (
 };
 
 export const getPolicies = async (
-  insuranceType?: 'LIFE' | 'HEALTH',
+  insuranceType?: 'LIFE' | 'HEALTH' | 'MOTOR',
 ): Promise<PolicyListResponse> => {
   try {
     const params = insuranceType ? { insurance_type: insuranceType } : {};

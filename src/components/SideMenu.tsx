@@ -87,13 +87,20 @@ const SideMenu: React.FC<SideMenuProps> = ({ visible, onClose }) => {
     },
     {
       id: 7,
+      title: 'Motor Insurance',
+      icon: 'car-sport',
+      iconType: 'Ionicons' as const,
+      route: 'MotorInsurance' as keyof RootStackParamList,
+    },
+    {
+      id: 8,
       title: 'Properties',
       icon: 'home-city',
       iconType: 'MaterialCommunityIcons' as const,
       route: 'Properties' as keyof RootStackParamList,
     },
     {
-      id: 8,
+      id: 9,
       title: 'Tutorials',
       icon: 'school',
       iconType: 'Ionicons' as const,
