@@ -13,11 +13,12 @@ interface DocumentItem {
   id: number | string;
   title: string;
   icon: ImageSourcePropType;
+  route?: string;
 }
 
 interface AddDocumentsSectionProps {
   items?: DocumentItem[];
-  onItemPress?: (item: DocumentItem) => void;
+  onItemPress?: (route?: string) => void;
 }
 
 const DEFAULT_ITEMS: DocumentItem[] = [
@@ -25,11 +26,13 @@ const DEFAULT_ITEMS: DocumentItem[] = [
     id: 1,
     title: 'Health\nInsurance',
     icon: require('../assets/icons/healthInsuranceIcon.png'),
+    route: 'HealthInsurance',
   },
   {
     id: 2,
     title: 'Life\nInsurance',
     icon: require('../assets/icons/lifeInsuranceIcon.png'),
+    route: 'LifeInsurance',
   },
   {
     id: 3,
@@ -45,6 +48,7 @@ const DEFAULT_ITEMS: DocumentItem[] = [
     id: 5,
     title: 'Tutorials',
     icon: require('../assets/icons/tutorialsIconNew.png'),
+    route: 'Tutorials',
   },
 ];
 
@@ -62,7 +66,7 @@ const AddDocumentsSection: React.FC<AddDocumentsSectionProps> = ({
             key={item.id}
             style={styles.item}
             activeOpacity={0.85}
-            onPress={() => onItemPress?.(item)}
+            onPress={() => onItemPress?.(item.route)}
             accessibilityRole="button"
             accessibilityLabel={item.title.replace('\n', ' ')}
           >

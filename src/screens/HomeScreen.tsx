@@ -8,13 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 // Components
 import AppHeader from '../components/AppHeader';
 import BottomNavigation from '../components/BottomNavigation';
-import ImageCarousel from '../components/ImageCarousel';
-import {
-  LoadingSpinner,
-  TabToggle,
-  MenuGrid,
-  ProgressChecklist,
-} from '../components/reusable';
+import { TabToggle, MenuGrid } from '../components/reusable';
 import HeroSection from '../components/HeroSection';
 import FirstConnectCTA from '../components/FirstConnectCTA';
 import AddDocumentsSection from '../components/AddDocumentsSection';
@@ -96,46 +90,14 @@ const HomeScreen = () => {
     }
   };
 
-  // Build checklist items based on profile and policy data
-  const getChecklistItems = () => {
-    const isProfileComplete = !!(
-      profile?.profile?.name &&
-      profile?.email &&
-      profile?.profile?.date_of_birth
-    );
-    const hasHealthInsurance = (policyData?.health.length || 0) > 0;
-    const hasLifeInsurance = (policyData?.life.length || 0) > 0;
-
-    return [
-      {
-        id: 1,
-        text: 'Complete your profile',
-        completed: isProfileComplete,
-        route: 'Profile',
-      },
-      {
-        id: 2,
-        text: 'Add your first Health Insurance',
-        completed: hasHealthInsurance,
-        route: 'HealthInsurance',
-      },
-      {
-        id: 3,
-        text: 'Add your first Life Insurance',
-        completed: hasLifeInsurance,
-        route: 'LifeInsurance',
-      },
-    ];
-  };
-
-  const handleChecklistItemPress = (item: { route?: string }) => {
-    if (item.route) {
-      navigation.navigate(item.route as any);
-    }
-  };
-
   const handleMenuItemPress = (route: string) => {
     navigation.navigate(route as any);
+  };
+
+  const handleDocumentItemPress = (route?: string) => {
+    if (route) {
+      navigation.navigate(route as any);
+    }
   };
 
   // Render Home Tab Content
@@ -161,22 +123,7 @@ const HomeScreen = () => {
 
       <FirstConnectCTA onAddPress={() => navigation.navigate('/')} />
 
-      <AddDocumentsSection
-        onItemPress={item => navigation.navigate(item.route)}
-      />
-
-      {/* <View style={styles.checklistContainer}>
-        {isLoadingData ? (
-          <LoadingSpinner />
-        ) : (
-          <ProgressChecklist
-            items={getChecklistItems()}
-            onItemPress={handleChecklistItemPress}
-          />
-        )}
-      </View> */}
-
-      {/* <ImageCarousel /> */}
+      <AddDocumentsSection onItemPress={handleDocumentItemPress} />
 
       <VideoSection />
     </>
