@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
@@ -16,13 +16,15 @@ import {
   ProgressChecklist,
 } from '../components/reusable';
 import HeroSection from '../components/HeroSection';
+import FirstConnectCTA from '../components/FirstConnectCTA';
+import AddDocumentsSection from '../components/AddDocumentsSection';
 
 // Services
 import { getProfile, UserProfile } from '../services/profile';
 import { getPolicies, PolicyListResponse } from '../services/policy';
 
 // Utils & Constants
-import { colors, spacing } from '../constants/theme';
+import { colors, spacing, typography } from '../constants/theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -139,6 +141,28 @@ const HomeScreen = () => {
   const renderHomeContent = () => (
     <>
       <MenuGrid items={MENU_ITEMS} onItemPress={handleMenuItemPress} />
+
+      <Text
+        style={{
+          width: '90%',
+          alignSelf: 'center',
+          marginTop: 25,
+          textAlign: 'center',
+          fontWeight: '400',
+          fontSize: typography.fontSize.md,
+          color: colors.text.primary,
+          lineHeight: 22,
+        }}
+      >
+        Your safety today. Your family’s security tomorrow with{' '}
+        <Text style={{ color: '#139DA4' }}>Nomisafe</Text>.
+      </Text>
+
+      <FirstConnectCTA onAddPress={() => navigation.navigate('/')} />
+
+      <AddDocumentsSection
+        onItemPress={item => navigation.navigate(item.route)}
+      />
 
       <View style={styles.checklistContainer}>
         {isLoadingData ? (
