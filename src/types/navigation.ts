@@ -17,6 +17,7 @@ export type RootStackParamList = {
   };
   PolicyDetail: { policyId: number };
   Properties: undefined;
+  FirstConnect: undefined;
   Tutorials: undefined;
   Service: undefined;
   SafeVault: undefined;

@@ -52,7 +52,7 @@ const MENU_ITEMS = [
     id: 4,
     title: 'First Connect',
     icon: require('../assets/icons/firstConnectIcon.png'),
-    route: 'Tutorials',
+    route: 'FirstConnect',
   },
 ];
 
