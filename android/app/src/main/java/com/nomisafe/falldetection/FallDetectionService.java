@@ -2,7 +2,11 @@ package com.nomisafe.falldetection;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
+import android.os.Looper;
 
 import android.app.Service;
 import android.app.Notification;
@@ -38,11 +42,23 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.Arguments;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.json.JSONObject;
+
 public class FallDetectionService extends Service implements SensorEventListener {
     public static final String ACTION_CANCEL_SOS = "com.nomisafe.falldetection.ACTION_CANCEL_SOS";
     public static volatile boolean sosCancelled = false;
     public static volatile boolean sosTimerActive = false;
     private static FallDetectionService instance;
+    private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
     private Handler sosHandler = new Handler();
     private Runnable sosTimeoutRunnable;
     private BroadcastReceiver sosCancelReceiver;
@@ -170,6 +186,9 @@ public class FallDetectionService extends Service implements SensorEventListener
         sosHandler.removeCallbacksAndMessages(null);
         stopAlertSound();
         stopLocationUpdates();
+        if (networkExecutor != null) {
+            networkExecutor.shutdownNow();
+        }
         instance = null;
         super.onDestroy();
         if (sensorManager != null) {
@@ -184,10 +203,22 @@ public class FallDetectionService extends Service implements SensorEventListener
     }
 
     private void sendEventToReactNative(String eventName, WritableMap params) {
-        if (reactContext != null && reactContext.hasActiveCatalystInstance()) {
+        Log.i(TAG, "Sending event to React Native: " + eventName);
+        if (reactContext == null) {
+            Log.w(TAG, "Cannot send event - reactContext is null");
+            return;
+        }
+        if (!reactContext.hasActiveCatalystInstance()) {
+            Log.w(TAG, "Cannot send event - no active catalyst instance");
+            return;
+        }
+        try {
             reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit(eventName, params);
+            Log.i(TAG, "Event sent successfully: " + eventName);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to send event: " + eventName, e);
         }
     }
 
@@ -559,6 +590,9 @@ public class FallDetectionService extends Service implements SensorEventListener
             params.putDouble("longitude", location.getLongitude());
             params.putDouble("accuracy", location.getAccuracy());
             Log.i(TAG, "SOS Location: lat=" + location.getLatitude() + ", lng=" + location.getLongitude());
+            
+            // Make API call to notify emergency contacts (runs on background thread)
+            sendSOSToBackend(location.getLatitude(), location.getLongitude(), (float) location.getAccuracy());
         } else {
             params.putNull("latitude");
             params.putNull("longitude");
@@ -583,8 +617,239 @@ public class FallDetectionService extends Service implements SensorEventListener
                 .setAutoCancel(true);
             notificationManager.notify(SOS_NOTIFICATION_ID, builder.build());
         }
-        
-        // TODO: Make API call to actually notify emergency contacts with location
+    }
+    
+    /**
+     * Send SOS alert to backend API (runs on background thread)
+     * Includes retry logic for reliability
+     */
+    private void sendSOSToBackend(double latitude, double longitude, float accuracy) {
+        networkExecutor.execute(() -> {
+            sendSOSWithRetry(latitude, longitude, accuracy, 3);  // Max 3 retries
+        });
+    }
+    
+    private void sendSOSWithRetry(double latitude, double longitude, float accuracy, int retriesLeft) {
+        try {
+            String accessToken = getAccessTokenFromStorage();
+            if (accessToken == null || accessToken.isEmpty()) {
+                Log.e(TAG, "Cannot send SOS to backend - no access token found");
+                // Save to pending so it can be retried when app opens
+                savePendingSOS(latitude, longitude, accuracy);
+                updateNotificationWithAPIResult(false, 0);
+                return;
+            }
+            
+            // Get API base URL - match the React Native config
+            // PHYSICAL_DEVICE uses local network IP, PRODUCTION uses AWS EC2
+            String apiBaseUrl = "http://192.168.1.19:8000/api";  // Local dev (match MAC_IP in api.ts)
+            // For production, use: "http://15.207.247.24/api"
+            String sosEndpoint = apiBaseUrl + "/sos/";
+            
+            Log.i(TAG, "Sending SOS to backend: " + sosEndpoint + " (retries left: " + retriesLeft + ")");
+            
+            URL url = new URL(sosEndpoint);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(30000);
+            conn.setReadTimeout(30000);
+            
+            // Create request body
+            JSONObject jsonBody = new JSONObject();
+            jsonBody.put("latitude", latitude);
+            jsonBody.put("longitude", longitude);
+            jsonBody.put("accuracy", accuracy);
+            
+            // Write request body
+            OutputStream os = conn.getOutputStream();
+            os.write(jsonBody.toString().getBytes("UTF-8"));
+            os.close();
+            
+            // Get response
+            int responseCode = conn.getResponseCode();
+            Log.i(TAG, "SOS API response code: " + responseCode);
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    response.append(line);
+                }
+                br.close();
+                
+                JSONObject responseJson = new JSONObject(response.toString());
+                int contactsNotified = responseJson.optInt("contacts_notified", 0);
+                Log.i(TAG, "SOS API success - contacts notified: " + contactsNotified);
+                
+                // Clear any pending SOS
+                clearPendingSOS();
+                
+                // Update notification with success
+                updateNotificationWithAPIResult(true, contactsNotified);
+            } else {
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+                StringBuilder error = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    error.append(line);
+                }
+                br.close();
+                Log.e(TAG, "SOS API error: " + error.toString());
+                
+                // Retry on server errors (5xx) or timeout
+                if (retriesLeft > 0 && responseCode >= 500) {
+                    Log.i(TAG, "Retrying SOS API call in 2 seconds...");
+                    Thread.sleep(2000);
+                    sendSOSWithRetry(latitude, longitude, accuracy, retriesLeft - 1);
+                } else {
+                    savePendingSOS(latitude, longitude, accuracy);
+                    updateNotificationWithAPIResult(false, 0);
+                }
+            }
+            
+            conn.disconnect();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to send SOS to backend", e);
+            
+            // Retry on network errors
+            if (retriesLeft > 0) {
+                try {
+                    Log.i(TAG, "Retrying SOS API call in 2 seconds...");
+                    Thread.sleep(2000);
+                    sendSOSWithRetry(latitude, longitude, accuracy, retriesLeft - 1);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                savePendingSOS(latitude, longitude, accuracy);
+                updateNotificationWithAPIResult(false, 0);
+            }
+        }
+    }
+    
+    /**
+     * Save pending SOS to SharedPreferences for retry when app opens
+     */
+    private void savePendingSOS(double latitude, double longitude, float accuracy) {
+        try {
+            SharedPreferences prefs = getSharedPreferences("nomisafe_sos", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putFloat("pending_latitude", (float) latitude);
+            editor.putFloat("pending_longitude", (float) longitude);
+            editor.putFloat("pending_accuracy", accuracy);
+            editor.putLong("pending_timestamp", System.currentTimeMillis());
+            editor.apply();
+            Log.i(TAG, "Saved pending SOS for retry");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to save pending SOS", e);
+        }
+    }
+    
+    /**
+     * Clear pending SOS after successful send
+     */
+    private void clearPendingSOS() {
+        try {
+            SharedPreferences prefs = getSharedPreferences("nomisafe_sos", Context.MODE_PRIVATE);
+            prefs.edit().clear().apply();
+            Log.i(TAG, "Cleared pending SOS");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to clear pending SOS", e);
+        }
+    }
+    
+    /**
+     * Check for and retry any pending SOS (called when app opens)
+     */
+    public void retryPendingSOS() {
+        try {
+            SharedPreferences prefs = getSharedPreferences("nomisafe_sos", Context.MODE_PRIVATE);
+            long timestamp = prefs.getLong("pending_timestamp", 0);
+            
+            // Only retry if pending SOS is less than 1 hour old
+            if (timestamp > 0 && (System.currentTimeMillis() - timestamp) < 3600000) {
+                float latitude = prefs.getFloat("pending_latitude", 0);
+                float longitude = prefs.getFloat("pending_longitude", 0);
+                float accuracy = prefs.getFloat("pending_accuracy", 0);
+                
+                if (latitude != 0 && longitude != 0) {
+                    Log.i(TAG, "Found pending SOS, retrying...");
+                    sendSOSToBackend(latitude, longitude, accuracy);
+                }
+            } else if (timestamp > 0) {
+                // Clear old pending SOS
+                clearPendingSOS();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to check pending SOS", e);
+        }
+    }
+    
+    /**
+     * Get access token from AsyncStorage (stored by React Native)
+     */
+    private String getAccessTokenFromStorage() {
+        try {
+            // AsyncStorage on Android uses SQLite database
+            File dbDir = new File(getApplicationInfo().dataDir + "/databases");
+            File dbFile = new File(dbDir, "RKStorage");
+            
+            if (!dbFile.exists()) {
+                Log.w(TAG, "AsyncStorage database not found");
+                return null;
+            }
+            
+            SQLiteDatabase db = SQLiteDatabase.openDatabase(dbFile.getAbsolutePath(), null, SQLiteDatabase.OPEN_READONLY);
+            Cursor cursor = db.rawQuery("SELECT value FROM catalystLocalStorage WHERE key = ?", new String[]{"@nomisafe_access_token"});
+            
+            String token = null;
+            if (cursor.moveToFirst()) {
+                token = cursor.getString(0);
+            }
+            cursor.close();
+            db.close();
+            
+            if (token != null) {
+                Log.i(TAG, "Found access token in AsyncStorage");
+            }
+            return token;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to get access token from storage", e);
+            return null;
+        }
+    }
+    
+    /**
+     * Update notification with API call result
+     */
+    private void updateNotificationWithAPIResult(boolean success, int contactsNotified) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (notificationManager != null) {
+                String channelId = "sos_alert_channel";
+                String title, text;
+                if (success) {
+                    title = "✅ Emergency Contacts Notified";
+                    text = contactsNotified > 0 
+                        ? contactsNotified + " contact(s) have been notified about your emergency"
+                        : "No emergency contacts found. Add FirstConnect contacts in the app.";
+                } else {
+                    title = "⚠️ SOS Alert Sent";
+                    text = "Emergency contacts may not have been notified. Please open the app to retry.";
+                }
+                
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
+                    .setContentTitle(title)
+                    .setContentText(text)
+                    .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true);
+                notificationManager.notify(SOS_NOTIFICATION_ID, builder.build());
+            }
+        });
     }
     
     private void startLocationUpdates() {

@@ -19,6 +19,7 @@ import {
   DeviceEventEmitter,
   PermissionsAndroid,
 } from 'react-native';
+import { sendSOSAlert } from '../services/sos';
 
 // Optional: geolocation fallback (install @react-native-community/geolocation if you want JS fallback)
 let Geolocation: any = null;
@@ -88,10 +89,13 @@ const FallDetectionPopup = forwardRef<
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
+    console.log('[FallDetectionPopup] Setting up event listeners');
+
     // Use DeviceEventEmitter directly for better compatibility
     const fallDetectedSub = DeviceEventEmitter.addListener(
       'FallDetected',
       event => {
+        console.log('[FallDetectionPopup] FallDetected event received:', event);
         setVisible(true);
         setCountdown(event?.countdown || 30);
         setStatus('countdown');
@@ -117,6 +121,7 @@ const FallDetectionPopup = forwardRef<
 
     // Listen for SOS cancelled
     const cancelledSub = DeviceEventEmitter.addListener('SOSCancelled', () => {
+      console.log('[FallDetectionPopup] SOSCancelled event received');
       Vibration.cancel();
       setStatus('cancelled');
       setTimeout(() => {
@@ -127,30 +132,65 @@ const FallDetectionPopup = forwardRef<
     });
 
     // Listen for SOS sent
-    const sentSub = DeviceEventEmitter.addListener('SOSSent', event => {
+    const sentSub = DeviceEventEmitter.addListener('SOSSent', async event => {
+      console.log('[FallDetectionPopup] SOSSent event received:', JSON.stringify(event));
       Vibration.cancel();
       setStatus('sent');
 
-      // Log the location received from native
-      if (event?.latitude != null && event?.longitude != null) {
+      // Send SOS alert to backend API
+      const latitude = event?.latitude;
+      const longitude = event?.longitude;
+      const accuracy = event?.accuracy;
+
+      if (latitude != null && longitude != null) {
         console.log('=== SOS SENT WITH LOCATION ===');
-        console.log('Latitude:', event.latitude);
-        console.log('Longitude:', event.longitude);
-        console.log('Accuracy:', event.accuracy);
+        console.log('Latitude:', latitude);
+        console.log('Longitude:', longitude);
+        console.log('Accuracy:', accuracy);
         console.log('==============================');
 
-        // TODO: Call API to notify emergency contacts with location
-        // Example: sendSOSAlert({ latitude: event.latitude, longitude: event.longitude });
+        // Call API to notify emergency contacts
+        try {
+          const response = await sendSOSAlert({
+            latitude,
+            longitude,
+            accuracy,
+          });
+          console.log('=== SOS API RESPONSE ===');
+          console.log('Contacts notified:', response.contacts_notified);
+          console.log('Maps link:', response.location?.maps_link);
+          if (response.failed_contacts?.length > 0) {
+            console.log('Failed contacts:', response.failed_contacts);
+          }
+          console.log('========================');
+        } catch (error: any) {
+          console.error('Failed to send SOS to API:', error.message);
+        }
       } else {
         console.log('=== SOS SENT (NO LOCATION FROM NATIVE) ===');
         // Try to get location from JS side as fallback
         if (Geolocation) {
           Geolocation.getCurrentPosition(
-            (position: any) => {
+            async (position: any) => {
+              const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              const acc = position.coords.accuracy;
               console.log('Fallback Location from JS:');
-              console.log('Latitude:', position.coords.latitude);
-              console.log('Longitude:', position.coords.longitude);
-              console.log('Accuracy:', position.coords.accuracy);
+              console.log('Latitude:', lat);
+              console.log('Longitude:', lng);
+              console.log('Accuracy:', acc);
+
+              // Call API with fallback location
+              try {
+                const response = await sendSOSAlert({
+                  latitude: lat,
+                  longitude: lng,
+                  accuracy: acc,
+                });
+                console.log('SOS API Response (fallback):', response);
+              } catch (error: any) {
+                console.error('Failed to send SOS to API:', error.message);
+              }
             },
             (error: any) => {
               console.log('Could not get location:', error.message);

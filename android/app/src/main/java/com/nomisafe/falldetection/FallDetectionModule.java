@@ -93,6 +93,12 @@ public class FallDetectionModule extends ReactContextBaseJavaModule implements P
         FallDetectionService.setReactContext(reactContext);
         Intent serviceIntent = new Intent(reactContext, FallDetectionService.class);
         reactContext.startService(serviceIntent);
+        
+        // Check for any pending SOS that failed to send
+        FallDetectionService service = FallDetectionService.getInstance();
+        if (service != null) {
+            service.retryPendingSOS();
+        }
     }
 
     @ReactMethod
@@ -111,6 +117,14 @@ public class FallDetectionModule extends ReactContextBaseJavaModule implements P
             // Fallback: set flags directly if service instance not available
             FallDetectionService.sosCancelled = true;
             FallDetectionService.sosTimerActive = false;
+        }
+    }
+    
+    @ReactMethod
+    public void retryPendingSOS() {
+        FallDetectionService service = FallDetectionService.getInstance();
+        if (service != null) {
+            service.retryPendingSOS();
         }
     }
 }
