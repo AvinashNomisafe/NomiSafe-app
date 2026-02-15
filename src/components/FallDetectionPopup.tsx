@@ -169,7 +169,7 @@ const FallDetectionPopup: React.FC<FallDetectionPopupProps> = ({
 
             {/* Message */}
             <Text style={styles.message}>
-              If you don't respond, we'll notify your emergency contacts in{' '}
+              If you don't respond, we'll notify your First Connect contacts in{' '}
               <Text style={styles.boldText}>{countdown} seconds</Text>.
             </Text>
 
