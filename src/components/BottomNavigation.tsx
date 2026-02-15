@@ -43,16 +43,16 @@ const BottomNavigation = () => {
         />
       </Item>
 
-      {/* Service - MaterialCommunityIcons */}
+      {/* First Connect - MaterialCommunityIcons */}
       <Item
-        label="Service"
-        isActive={current === 'Service'}
-        onPress={() => navigation.navigate('Service')}
+        label="First Connect"
+        isActive={current === 'FirstConnect'}
+        onPress={() => navigation.navigate('FirstConnect')}
       >
         <MaterialCommunityIcons
-          name="cog"
+          name="account-group"
           size={28}
-          color={current === 'Service' ? '#15A3A3' : '#7A7A7A'}
+          color={current === 'FirstConnect' ? '#15A3A3' : '#7A7A7A'}
           style={styles.iconVector}
         />
       </Item>
