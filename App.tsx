@@ -119,6 +119,8 @@ function App() {
             'android.permission.WAKE_LOCK',
             'android.permission.ACTIVITY_RECOGNITION',
             'android.permission.HIGH_SAMPLING_RATE_SENSORS',
+            'android.permission.ACCESS_FINE_LOCATION',
+            'android.permission.ACCESS_COARSE_LOCATION',
           ];
 
           for (const permission of permissions) {

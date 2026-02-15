@@ -12,6 +12,7 @@ import android.app.PendingIntent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -25,6 +26,11 @@ import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import androidx.core.content.ContextCompat;
 import android.util.Log;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactContext;
@@ -82,6 +88,26 @@ public class FallDetectionService extends Service implements SensorEventListener
     private static final int SOS_NOTIFICATION_ID = 2;
     private NotificationManager notificationManager;
     
+    // Location tracking
+    private LocationManager locationManager;
+    private Location currentLocation;
+    private LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.i(TAG, "Location updated: lat=" + location.getLatitude() + ", lng=" + location.getLongitude() + ", accuracy=" + location.getAccuracy());
+            currentLocation = location;
+        }
+        
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+        
+        @Override
+        public void onProviderEnabled(String provider) {}
+        
+        @Override
+        public void onProviderDisabled(String provider) {}
+    };
+    
     public static void setReactContext(ReactContext context) {
         reactContext = context;
     }
@@ -123,6 +149,9 @@ public class FallDetectionService extends Service implements SensorEventListener
         }
         startForeground(1, notification);
 
+        // Initialize location manager
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
         // Now register sensors with faster sampling for better detection
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager != null) {
@@ -140,6 +169,7 @@ public class FallDetectionService extends Service implements SensorEventListener
     public void onDestroy() {
         sosHandler.removeCallbacksAndMessages(null);
         stopAlertSound();
+        stopLocationUpdates();
         instance = null;
         super.onDestroy();
         if (sensorManager != null) {
@@ -285,6 +315,9 @@ public class FallDetectionService extends Service implements SensorEventListener
         sosTimerActive = true;
         countdownSecondsRemaining = COUNTDOWN_SECONDS;
         sosHandler.removeCallbacksAndMessages(null);
+        
+        // Start requesting location updates immediately so we have fresh location by the time SOS is sent
+        startLocationUpdates();
         
         // Get notification manager
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -497,28 +530,190 @@ public class FallDetectionService extends Service implements SensorEventListener
         }
     }
     
+    /**
+     * Called from SOSAlertActivity when its countdown finishes.
+     * Stops the service's countdown and triggers SOS.
+     */
+    public void sendSOSFromActivity() {
+        Log.i(TAG, "sendSOSFromActivity called from Activity");
+        // Stop the service's countdown to prevent duplicate calls
+        sosHandler.removeCallbacksAndMessages(null);
+        sendSOS();
+    }
+    
     private void sendSOS() {
         Log.i(TAG, "SOS sent to emergency contacts");
         sosTimerActive = false;
         stopAlertSound();
         
-        // Send event to React Native
+        // Get location (use best available - fresh from updates or cached)
+        Location location = getBestLocation();
+        
+        // Stop location updates now that we have the location
+        stopLocationUpdates();
+        
+        // Send event to React Native with location data
         WritableMap params = Arguments.createMap();
+        if (location != null) {
+            params.putDouble("latitude", location.getLatitude());
+            params.putDouble("longitude", location.getLongitude());
+            params.putDouble("accuracy", location.getAccuracy());
+            Log.i(TAG, "SOS Location: lat=" + location.getLatitude() + ", lng=" + location.getLongitude());
+        } else {
+            params.putNull("latitude");
+            params.putNull("longitude");
+            params.putNull("accuracy");
+            Log.w(TAG, "SOS Location: Could not get location");
+        }
         sendEventToReactNative("SOSSent", params);
         
         // Update notification to show SOS was sent
         if (notificationManager != null) {
             String channelId = "sos_alert_channel";
+            String locationText = location != null 
+                ? String.format("Location: %.4f, %.4f", location.getLatitude(), location.getLongitude())
+                : "Location unavailable";
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
                 .setContentTitle("📤 SOS Alert Sent")
                 .setContentText("Your emergency contacts have been notified")
+                .setStyle(new NotificationCompat.BigTextStyle()
+                    .bigText("Your emergency contacts have been notified.\n" + locationText))
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
             notificationManager.notify(SOS_NOTIFICATION_ID, builder.build());
         }
         
-        // TODO: Make API call to actually notify emergency contacts
+        // TODO: Make API call to actually notify emergency contacts with location
+    }
+    
+    private void startLocationUpdates() {
+        if (locationManager == null) {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        }
+        
+        if (locationManager == null) {
+            Log.w(TAG, "LocationManager is null");
+            return;
+        }
+        
+        // Check for location permission
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "Location permission not granted - cannot request location updates");
+            return;
+        }
+        
+        try {
+            // Try GPS first (most accurate)
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
+                Log.i(TAG, "Started GPS location updates");
+            }
+            
+            // Also try Network provider (faster initial fix)
+            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
+                Log.i(TAG, "Started Network location updates");
+            }
+            
+            // Also get last known location as initial value
+            Location cachedLocation = getLastKnownLocation();
+            if (cachedLocation != null && currentLocation == null) {
+                currentLocation = cachedLocation;
+                Log.i(TAG, "Using cached location: lat=" + cachedLocation.getLatitude() + ", lng=" + cachedLocation.getLongitude());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting location updates", e);
+        }
+    }
+    
+    private void stopLocationUpdates() {
+        if (locationManager != null && locationListener != null) {
+            try {
+                locationManager.removeUpdates(locationListener);
+                Log.i(TAG, "Stopped location updates");
+            } catch (Exception e) {
+                Log.e(TAG, "Error stopping location updates", e);
+            }
+        }
+        currentLocation = null;
+    }
+    
+    private Location getBestLocation() {
+        // First check if we have a fresh location from updates
+        if (currentLocation != null) {
+            Log.i(TAG, "Using fresh location from updates: lat=" + currentLocation.getLatitude() + ", lng=" + currentLocation.getLongitude());
+            return currentLocation;
+        }
+        
+        // Fall back to cached location
+        Location cached = getLastKnownLocation();
+        if (cached != null) {
+            Log.i(TAG, "Using cached location: lat=" + cached.getLatitude() + ", lng=" + cached.getLongitude());
+        } else {
+            Log.w(TAG, "No location available");
+        }
+        return cached;
+    }
+    
+    private Location getLastKnownLocation() {
+        try {
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (locationManager == null) {
+                return null;
+            }
+            
+            // Check for location permission
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
+                    != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) 
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.w(TAG, "Location permission not granted");
+                return null;
+            }
+            
+            Location bestLocation = null;
+            
+            // Try GPS first
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                Location gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (gpsLocation != null) {
+                    bestLocation = gpsLocation;
+                }
+            }
+            
+            // Try Network provider
+            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                Location networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (networkLocation != null) {
+                    // Use network location if it's more recent or GPS wasn't available
+                    if (bestLocation == null || 
+                        networkLocation.getTime() > bestLocation.getTime()) {
+                        bestLocation = networkLocation;
+                    }
+                }
+            }
+            
+            // Try fused provider (Android 12+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (locationManager.isProviderEnabled(LocationManager.FUSED_PROVIDER)) {
+                    Location fusedLocation = locationManager.getLastKnownLocation(LocationManager.FUSED_PROVIDER);
+                    if (fusedLocation != null) {
+                        if (bestLocation == null || fusedLocation.getTime() > bestLocation.getTime()) {
+                            bestLocation = fusedLocation;
+                        }
+                    }
+                }
+            }
+            
+            return bestLocation;
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting location", e);
+            return null;
+        }
     }
     
     public void cancelSOS() {
@@ -527,6 +722,7 @@ public class FallDetectionService extends Service implements SensorEventListener
         sosTimerActive = false;
         sosHandler.removeCallbacksAndMessages(null);
         stopAlertSound();
+        stopLocationUpdates();
         
         // Send event to React Native
         WritableMap params = Arguments.createMap();

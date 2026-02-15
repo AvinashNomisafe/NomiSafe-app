@@ -381,9 +381,16 @@ public class SOSAlertActivity extends Activity {
     
     private void sendSOS() {
         Log.i(TAG, "SOS sent to nominees");
-        FallDetectionService.sosTimerActive = false;
         
-        // Note: Sound and vibration are stopped in FallDetectionService
+        // Call the service's sendSOS method which handles:
+        // - Stopping sound and vibration
+        // - Getting location
+        // - Sending event to React Native
+        // - Updating notification
+        FallDetectionService service = FallDetectionService.getInstance();
+        if (service != null) {
+            service.sendSOSFromActivity();
+        }
         
         // Update UI to show SOS was sent
         countdownText.setText("📤");
@@ -391,14 +398,6 @@ public class SOSAlertActivity extends Activity {
         ((TextView) ((android.widget.LinearLayout) countdownText.getParent().getParent()).getChildAt(2)).setText("SOS Alert Sent");
         ((TextView) ((android.widget.LinearLayout) countdownText.getParent().getParent()).getChildAt(3)).setText("Your emergency contacts have been notified.");
         cancelButton.setVisibility(View.GONE);
-        
-        // Show notification that SOS was sent
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.cancel(2); // Cancel countdown notification
-        }
-        
-        // TODO: Make API call to actually notify nominees
         
         handler.postDelayed(() -> finish(), 3000);
     }

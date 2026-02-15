@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import {
   View,
   Text,
@@ -11,7 +17,16 @@ import {
   Dimensions,
   Platform,
   DeviceEventEmitter,
+  PermissionsAndroid,
 } from 'react-native';
+
+// Optional: geolocation fallback (install @react-native-community/geolocation if you want JS fallback)
+let Geolocation: any = null;
+try {
+  Geolocation = require('@react-native-community/geolocation').default;
+} catch (e) {
+  // Geolocation package not installed - native service will handle location
+}
 
 const { FallDetectionModule } = NativeModules;
 const { width } = Dimensions.get('window');
@@ -21,10 +36,15 @@ interface FallDetectionPopupProps {
   onSOSCancelled?: () => void;
 }
 
-const FallDetectionPopup: React.FC<FallDetectionPopupProps> = ({
-  onSOSSent,
-  onSOSCancelled,
-}) => {
+export interface FallDetectionPopupRef {
+  showPopup: () => void;
+  hidePopup: () => void;
+}
+
+const FallDetectionPopup = forwardRef<
+  FallDetectionPopupRef,
+  FallDetectionPopupProps
+>(({ onSOSSent, onSOSCancelled }, ref) => {
   const [visible, setVisible] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const [status, setStatus] = useState<'countdown' | 'sent' | 'cancelled'>(
@@ -32,6 +52,38 @@ const FallDetectionPopup: React.FC<FallDetectionPopupProps> = ({
   );
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
+
+  // Expose methods to parent component via ref
+  useImperativeHandle(ref, () => ({
+    showPopup: () => {
+      setVisible(true);
+      setCountdown(30);
+      setStatus('countdown');
+      progressAnim.setValue(0);
+      startPulseAnimation();
+    },
+    hidePopup: () => {
+      setVisible(false);
+      setStatus('countdown');
+    },
+  }));
+
+  const startPulseAnimation = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+  };
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -75,9 +127,43 @@ const FallDetectionPopup: React.FC<FallDetectionPopupProps> = ({
     });
 
     // Listen for SOS sent
-    const sentSub = DeviceEventEmitter.addListener('SOSSent', () => {
+    const sentSub = DeviceEventEmitter.addListener('SOSSent', event => {
       Vibration.cancel();
       setStatus('sent');
+
+      // Log the location received from native
+      if (event?.latitude != null && event?.longitude != null) {
+        console.log('=== SOS SENT WITH LOCATION ===');
+        console.log('Latitude:', event.latitude);
+        console.log('Longitude:', event.longitude);
+        console.log('Accuracy:', event.accuracy);
+        console.log('==============================');
+
+        // TODO: Call API to notify emergency contacts with location
+        // Example: sendSOSAlert({ latitude: event.latitude, longitude: event.longitude });
+      } else {
+        console.log('=== SOS SENT (NO LOCATION FROM NATIVE) ===');
+        // Try to get location from JS side as fallback
+        if (Geolocation) {
+          Geolocation.getCurrentPosition(
+            (position: any) => {
+              console.log('Fallback Location from JS:');
+              console.log('Latitude:', position.coords.latitude);
+              console.log('Longitude:', position.coords.longitude);
+              console.log('Accuracy:', position.coords.accuracy);
+            },
+            (error: any) => {
+              console.log('Could not get location:', error.message);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 },
+          );
+        } else {
+          console.log(
+            'Geolocation package not installed - no JS fallback available',
+          );
+        }
+      }
+
       setTimeout(() => {
         setVisible(false);
         setStatus('countdown');
@@ -92,23 +178,6 @@ const FallDetectionPopup: React.FC<FallDetectionPopupProps> = ({
       sentSub.remove();
     };
   }, [onSOSSent, onSOSCancelled]);
-
-  const startPulseAnimation = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
-  };
 
   const handleCancel = () => {
     // Call native module to cancel SOS
@@ -211,7 +280,7 @@ const FallDetectionPopup: React.FC<FallDetectionPopupProps> = ({
       </View>
     </Modal>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
