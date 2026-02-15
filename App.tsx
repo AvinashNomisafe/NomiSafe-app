@@ -134,7 +134,7 @@ function App() {
           }
 
           console.log('[FallDetection] Starting fall detection service...');
-          // NativeModules.FallDetectionModule?.startService();
+          NativeModules.FallDetectionModule?.startService();
           console.log('[FallDetection] Service started successfully');
         } catch (e) {
           console.log('Fall detection service init failed', e);

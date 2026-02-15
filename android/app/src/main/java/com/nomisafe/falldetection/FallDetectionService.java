@@ -18,7 +18,14 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.media.AudioManager;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
 import android.media.ToneGenerator;
+import android.net.Uri;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
+import android.util.Log;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -29,6 +36,7 @@ public class FallDetectionService extends Service implements SensorEventListener
     public static final String ACTION_CANCEL_SOS = "com.nomisafe.falldetection.ACTION_CANCEL_SOS";
     public static volatile boolean sosCancelled = false;
     public static volatile boolean sosTimerActive = false;
+    private static FallDetectionService instance;
     private Handler sosHandler = new Handler();
     private Runnable sosTimeoutRunnable;
     private BroadcastReceiver sosCancelReceiver;
@@ -63,13 +71,29 @@ public class FallDetectionService extends Service implements SensorEventListener
     // Reference to React context for sending events
     private static ReactContext reactContext;
     
+    // Sound and vibration for SOS alert
+    private static final String TAG = "FallDetectionService";
+    private static final int COUNTDOWN_SECONDS = 30;
+    private MediaPlayer mediaPlayer;
+    private ToneGenerator toneGenerator;
+    private Vibrator vibrator;
+    private int countdownSecondsRemaining = COUNTDOWN_SECONDS;
+    private Runnable countdownRunnable;
+    private static final int SOS_NOTIFICATION_ID = 2;
+    private NotificationManager notificationManager;
+    
     public static void setReactContext(ReactContext context) {
         reactContext = context;
+    }
+    
+    public static FallDetectionService getInstance() {
+        return instance;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
         // Start as foreground service with notification FIRST
         String channelId = "fall_detection_channel";
         Notification notification;
@@ -115,6 +139,8 @@ public class FallDetectionService extends Service implements SensorEventListener
     @Override
     public void onDestroy() {
         sosHandler.removeCallbacksAndMessages(null);
+        stopAlertSound();
+        instance = null;
         super.onDestroy();
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
@@ -257,11 +283,21 @@ public class FallDetectionService extends Service implements SensorEventListener
     private void triggerFallAlert() {
         sosCancelled = false;
         sosTimerActive = true;
+        countdownSecondsRemaining = COUNTDOWN_SECONDS;
         sosHandler.removeCallbacksAndMessages(null);
+        
+        // Get notification manager
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        
+        // Start vibration IMMEDIATELY
+        startVibration();
+        
+        // Start alarm sound IMMEDIATELY
+        playAlertSound();
         
         // Send event to React Native (for when app is in foreground)
         WritableMap params = Arguments.createMap();
-        params.putInt("countdown", 30);
+        params.putInt("countdown", COUNTDOWN_SECONDS);
         sendEventToReactNative("FallDetected", params);
         
         // Create the full-screen intent for SOSAlertActivity
@@ -285,25 +321,63 @@ public class FallDetectionService extends Service implements SensorEventListener
         
         // Create high-priority notification channel for SOS alerts
         String channelId = "sos_alert_channel";
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && manager != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && notificationManager != null) {
             NotificationChannel channel = new NotificationChannel(
                 channelId,
                 "SOS Alerts",
                 NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription("Emergency fall detection alerts");
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{0, 500, 200, 500});
+            channel.enableVibration(false);  // We handle vibration separately
             channel.setBypassDnd(true);
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-            manager.createNotificationChannel(channel);
+            notificationManager.createNotificationChannel(channel);
         }
         
-        // Build notification with full-screen intent
+        // Show initial notification and start countdown
+        updateNotification(channelId, fullScreenPendingIntent, cancelPendingIntent, countdownSecondsRemaining);
+        
+        // Start countdown timer that updates notification every second
+        countdownRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (sosCancelled || !sosTimerActive) {
+                    return;
+                }
+                
+                if (countdownSecondsRemaining > 0) {
+                    countdownSecondsRemaining--;
+                    
+                    // Update notification with countdown
+                    updateNotification(channelId, fullScreenPendingIntent, cancelPendingIntent, countdownSecondsRemaining);
+                    
+                    // Send countdown event to React Native
+                    WritableMap countdownParams = Arguments.createMap();
+                    countdownParams.putInt("secondsRemaining", countdownSecondsRemaining);
+                    sendEventToReactNative("SOSCountdown", countdownParams);
+                    
+                    // Schedule next tick
+                    sosHandler.postDelayed(this, 1000);
+                } else {
+                    // Time's up - send SOS
+                    sendSOS();
+                }
+            }
+        };
+        sosHandler.postDelayed(countdownRunnable, 1000);
+        
+        // Also try to launch activity directly (for when notification doesn't trigger it)
+        try {
+            startActivity(fullScreenIntent);
+        } catch (Exception e) {
+            Log.e(TAG, "Activity launch failed - notification will serve as fallback", e);
+        }
+    }
+    
+    private void updateNotification(String channelId, PendingIntent fullScreenPendingIntent, PendingIntent cancelPendingIntent, int seconds) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-            .setContentTitle("🚨 SOS! Fall Detected")
+            .setContentTitle("🚨 SOS! Fall Detected - " + seconds + "s")
             .setContentText("Tap to respond or we'll notify your emergency contacts")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -311,20 +385,156 @@ public class FallDetectionService extends Service implements SensorEventListener
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false)
             .setOngoing(true)
-            .setFullScreenIntent(fullScreenPendingIntent, true)  // This makes it show over lock screen!
+            .setProgress(COUNTDOWN_SECONDS, seconds, false)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "I'm Okay", cancelPendingIntent)
             .setContentIntent(fullScreenPendingIntent);
         
-        final int notificationId = 2;
-        if (manager != null) {
-            manager.notify(notificationId, builder.build());
+        if (notificationManager != null) {
+            notificationManager.notify(SOS_NOTIFICATION_ID, builder.build());
+        }
+    }
+    
+    private void startVibration() {
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator != null) {
+            long[] pattern = {0, 500, 200, 500, 200, 500};
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0)); // 0 = repeat from start
+            } else {
+                vibrator.vibrate(pattern, 0);
+            }
+            Log.i(TAG, "Started vibration");
+        }
+    }
+    
+    private void playAlertSound() {
+        try {
+            // Get the default alarm sound URI
+            Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            if (alarmUri == null) {
+                alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            }
+            if (alarmUri == null) {
+                alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            }
+            
+            if (alarmUri != null) {
+                mediaPlayer = new MediaPlayer();
+                mediaPlayer.setDataSource(this, alarmUri);
+                
+                // Set audio attributes for alarm stream
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build();
+                    mediaPlayer.setAudioAttributes(audioAttributes);
+                } else {
+                    mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+                }
+                
+                mediaPlayer.setLooping(true);
+                mediaPlayer.setVolume(1.0f, 1.0f);
+                mediaPlayer.prepare();
+                mediaPlayer.start();
+                Log.i(TAG, "Started alarm sound with MediaPlayer");
+            } else {
+                startToneGeneratorLoop();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start MediaPlayer alarm, falling back to ToneGenerator", e);
+            startToneGeneratorLoop();
+        }
+    }
+    
+    private void startToneGeneratorLoop() {
+        try {
+            toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+            sosHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (!sosCancelled && sosTimerActive && toneGenerator != null) {
+                        toneGenerator.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 1000);
+                        sosHandler.postDelayed(this, 1500);
+                    }
+                }
+            });
+            Log.i(TAG, "Started ToneGenerator loop as fallback");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start ToneGenerator", e);
+        }
+    }
+    
+    private void stopAlertSound() {
+        if (mediaPlayer != null) {
+            try {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.release();
+                mediaPlayer = null;
+                Log.i(TAG, "Stopped MediaPlayer alarm");
+            } catch (Exception e) {
+                Log.e(TAG, "Error stopping MediaPlayer", e);
+            }
         }
         
-        // Also try to launch activity directly (for when notification doesn't trigger it)
-        try {
-            startActivity(fullScreenIntent);
-        } catch (Exception e) {
-            // Activity launch failed - notification will serve as fallback
+        if (toneGenerator != null) {
+            try {
+                toneGenerator.stopTone();
+                toneGenerator.release();
+                toneGenerator = null;
+                Log.i(TAG, "Stopped ToneGenerator");
+            } catch (Exception e) {
+                Log.e(TAG, "Error stopping ToneGenerator", e);
+            }
+        }
+        
+        if (vibrator != null) {
+            vibrator.cancel();
+            Log.i(TAG, "Stopped vibration");
+        }
+    }
+    
+    private void sendSOS() {
+        Log.i(TAG, "SOS sent to emergency contacts");
+        sosTimerActive = false;
+        stopAlertSound();
+        
+        // Send event to React Native
+        WritableMap params = Arguments.createMap();
+        sendEventToReactNative("SOSSent", params);
+        
+        // Update notification to show SOS was sent
+        if (notificationManager != null) {
+            String channelId = "sos_alert_channel";
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
+                .setContentTitle("📤 SOS Alert Sent")
+                .setContentText("Your emergency contacts have been notified")
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+            notificationManager.notify(SOS_NOTIFICATION_ID, builder.build());
+        }
+        
+        // TODO: Make API call to actually notify emergency contacts
+    }
+    
+    public void cancelSOS() {
+        Log.i(TAG, "SOS cancelled");
+        sosCancelled = true;
+        sosTimerActive = false;
+        sosHandler.removeCallbacksAndMessages(null);
+        stopAlertSound();
+        
+        // Send event to React Native
+        WritableMap params = Arguments.createMap();
+        sendEventToReactNative("SOSCancelled", params);
+        
+        // Cancel notification
+        if (notificationManager != null) {
+            notificationManager.cancel(SOS_NOTIFICATION_ID);
         }
     }
 

@@ -57,11 +57,8 @@ public class SOSAlertActivity extends Activity {
         // Set up the UI
         setContentView(createContentView());
         
-        // Start vibration pattern
-        startVibration();
-        
-        // Play alert sound
-        playAlertSound();
+        // Note: Sound and vibration are started in FallDetectionService immediately when fall is detected
+        // We don't start them here to avoid duplicates
         
         // Start countdown
         startCountdown();
@@ -357,20 +354,20 @@ public class SOSAlertActivity extends Activity {
         Log.i(TAG, "SOS Cancelled by user");
         isCancelled = true;
         FallDetectionService.sosCancelled = true;
+        FallDetectionService.sosTimerActive = false;
         
-        // Stop vibration
-        if (vibrator != null) {
-            vibrator.cancel();
-        }
-        
-        // Stop the alarm sound
-        stopAlertSound();
+        // Note: Sound and vibration are stopped in FallDetectionService via broadcast
         
         // Cancel the notification
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
             notificationManager.cancel(2); // SOS notification ID
         }
+        
+        // Broadcast cancel intent to stop sound/vibration in the service
+        Intent cancelIntent = new Intent(FallDetectionService.ACTION_CANCEL_SOS);
+        cancelIntent.setPackage(getPackageName());
+        sendBroadcast(cancelIntent);
         
         // Show confirmation briefly then close
         countdownText.setText("✓");
@@ -384,14 +381,9 @@ public class SOSAlertActivity extends Activity {
     
     private void sendSOS() {
         Log.i(TAG, "SOS sent to nominees");
+        FallDetectionService.sosTimerActive = false;
         
-        // Stop vibration
-        if (vibrator != null) {
-            vibrator.cancel();
-        }
-        
-        // Stop the alarm sound
-        stopAlertSound();
+        // Note: Sound and vibration are stopped in FallDetectionService
         
         // Update UI to show SOS was sent
         countdownText.setText("📤");
@@ -417,12 +409,7 @@ public class SOSAlertActivity extends Activity {
         isCancelled = true;  // Stop any loops
         handler.removeCallbacksAndMessages(null);
         
-        if (vibrator != null) {
-            vibrator.cancel();
-        }
-        
-        // Stop the alarm sound
-        stopAlertSound();
+        // Note: Sound and vibration are managed by FallDetectionService
         
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();

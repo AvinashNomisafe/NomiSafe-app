@@ -11,11 +11,20 @@ public class SOSCancelReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i("NomiSafeDebug", "SOSCancelReceiver triggered. Action: " + intent.getAction());
-        // Set the cancel flag in FallDetectionService
-        FallDetectionService.sosCancelled = true;
-        // Cancel the notification
-        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (manager != null) manager.cancel(2);
+        
+        // Call cancelSOS on the service instance to stop sound/vibration
+        FallDetectionService service = FallDetectionService.getInstance();
+        if (service != null) {
+            service.cancelSOS();
+        } else {
+            // Fallback: Set the cancel flag if service instance not available
+            FallDetectionService.sosCancelled = true;
+            FallDetectionService.sosTimerActive = false;
+            // Cancel the notification
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null) manager.cancel(2);
+        }
+        
         Log.i("NomiSafeDebug", "SOS Cancelled by user (manifest receiver)");
     }
 }
