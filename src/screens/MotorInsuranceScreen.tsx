@@ -252,9 +252,10 @@ const MotorInsuranceScreen: React.FC = () => {
     }
   };
 
-  const formatCurrency = (value: number | null | undefined) => {
-    if (!value) return '---';
-    return `₹${value.toLocaleString('en-IN')}`;
+  const formatCurrency = (value: string) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    return `₹${num.toLocaleString('en-IN')}`;
   };
 
   const renderUnprocessedPolicyCard = (policy: PolicyListItem) => {
@@ -310,137 +311,152 @@ const MotorInsuranceScreen: React.FC = () => {
     return (
       <TouchableOpacity
         key={policy.id}
-        style={styles.policyCard}
+        style={[styles.policyCard, policy.is_expired && styles.expiredCard]}
         onPress={() =>
           navigation.navigate('PolicyDetail', { policyId: policy.id })
         }
       >
-        <View style={styles.policyCardHeader}>
+        <View style={styles.policyHeader}>
           <Text style={styles.policyName}>{policy.name}</Text>
-          <Text style={styles.policyType}>Motor Insurance</Text>
         </View>
-
-        <View style={styles.policyDetailRow}>
-          <Text style={styles.policyLabel}>Insurance Company</Text>
-          <Text style={styles.policyValue}>{policy.insurer_name || '---'}</Text>
-        </View>
-
-        <View style={styles.policyDetailRow}>
-          <Text style={styles.policyLabel}>Policy Number</Text>
-          <Text style={styles.policyValue}>
-            {policy.policy_number || '---'}
-          </Text>
-        </View>
-
-        <View style={styles.policyDetailRow}>
-          <Text style={styles.policyLabel}>Premium</Text>
-          <Text style={styles.policyValue}>
-            {formatCurrency(policy.premium_amount)}
-          </Text>
-        </View>
-
-        <View style={styles.policyDetailRow}>
-          <Text style={styles.policyLabel}>IDV / Cover</Text>
-          <Text style={styles.policyValue}>
-            {formatCurrency(policy.sum_assured)}
-          </Text>
-        </View>
-
-        {policy.end_date && (
-          <View style={styles.policyDetailRow}>
-            <Text style={styles.policyLabel}>Valid Until</Text>
-            <Text
-              style={[
-                styles.policyValue,
-                policy.is_expired && styles.expiredText,
-              ]}
-            >
-              {new Date(policy.end_date).toLocaleDateString('en-IN')}
-              {policy.is_expired && ' (Expired)'}
+        {policy.policy_number && (
+          <Text style={styles.policyNumber}>{policy.policy_number}</Text>
+        )}
+        {policy.insurer_name && (
+          <Text style={styles.insurer}>{policy.insurer_name}</Text>
+        )}
+        <View style={styles.policyDetails}>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Premium</Text>
+            <Text style={styles.detailValue}>
+              {formatCurrency(policy.premium_amount)}
             </Text>
           </View>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>IDV</Text>
+            <Text style={styles.detailValue}>
+              {formatCurrency(policy.sum_assured)}
+            </Text>
+          </View>
+        </View>
+        {policy.end_date && (
+          <Text
+            style={[styles.endDate, policy.is_expired && styles.expiredText]}
+          >
+            Valid Until: {new Date(policy.end_date).toLocaleDateString('en-IN')}
+            {policy.is_expired && ' (Expired)'}
+          </Text>
         )}
       </TouchableOpacity>
     );
   };
 
+  if (showUploadForm) {
+    return (
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <AppHeader />
+        <ScrollView style={styles.container}>
+          <View style={styles.content}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => setShowUploadForm(false)}
+            >
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.icon}>🚗</Text>
+            <Text style={styles.pageTitle}>Motor Insurance</Text>
+
+            <View style={styles.form}>
+              <Text style={styles.label}>Insurance Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g., My Car Insurance"
+                value={name}
+                onChangeText={setName}
+                placeholderTextColor="#999"
+              />
+
+              <Text style={styles.label}>Policy Document (PDF)</Text>
+              <TouchableOpacity
+                style={[styles.filePicker, selectedFile && styles.fileSelected]}
+                onPress={handleFilePick}
+              >
+                <Text style={styles.filePickerText}>
+                  {selectedFile ? selectedFile.name : 'Choose PDF'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, isLoading && styles.buttonDisabled]}
+                onPress={handleSubmit}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Upload Policy</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+        <BottomNavigation />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <AppHeader />
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Motor Insurance</Text>
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.icon}>🚗</Text>
+          <Text style={styles.pageTitle}>Motor Insurance</Text>
+
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => setShowUploadForm(!showUploadForm)}
+            onPress={() => setShowUploadForm(true)}
           >
-            <Text style={styles.addButtonText}>
-              {showUploadForm ? '− Cancel' : '+ Add Policy'}
-            </Text>
+            <Text style={styles.addButtonText}>+ Add Policy</Text>
           </TouchableOpacity>
-        </View>
 
-        {showUploadForm && (
-          <View style={styles.uploadFormCard}>
-            <Text style={styles.formTitle}>Upload Motor Insurance Policy</Text>
-
-            <Text style={styles.label}>Vehicle Insurance Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., My Car Insurance"
-              value={name}
-              onChangeText={setName}
-              placeholderTextColor="#999"
-            />
-
-            <Text style={styles.label}>Policy Document (PDF)</Text>
-            <TouchableOpacity
-              style={styles.filePickerButton}
-              onPress={handleFilePick}
-            >
-              <Text style={styles.filePickerText}>
-                {selectedFile ? selectedFile.name : 'Choose PDF'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.submitButton, isLoading && styles.disabledButton]}
-              onPress={handleSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.submitButtonText}>Upload Policy</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Unprocessed Policies */}
-        {unprocessedPolicies.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pending Verification</Text>
-            {unprocessedPolicies.map(renderUnprocessedPolicyCard)}
-          </View>
-        )}
-
-        {/* Verified Motor Policies */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My Motor Insurance Policies</Text>
           {isLoadingPolicies ? (
-            <ActivityIndicator size="large" color="#139DA4" />
-          ) : motorPolicies.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                No motor insurance policies yet
-              </Text>
-              <Text style={styles.emptyStateSubtext}>
-                Upload your vehicle insurance policy to get started
-              </Text>
-            </View>
+            <ActivityIndicator
+              size="large"
+              color="#4DB6AC"
+              style={styles.loader}
+            />
           ) : (
-            motorPolicies.map(renderPolicyCard)
+            <>
+              {unprocessedPolicies.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Pending Verification</Text>
+                  {unprocessedPolicies.map(renderUnprocessedPolicyCard)}
+                </View>
+              )}
+
+              {motorPolicies.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Active Policies</Text>
+                  {motorPolicies.map(renderPolicyCard)}
+                </View>
+              )}
+
+              {motorPolicies.length === 0 &&
+                unprocessedPolicies.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyIcon}>📄</Text>
+                    <Text style={styles.emptyText}>
+                      No motor insurance policies yet
+                    </Text>
+                    <Text style={styles.emptySubtext}>
+                      Click "Add Policy" to upload your first motor insurance
+                      policy
+                    </Text>
+                  </View>
+                )}
+            </>
           )}
         </View>
       </ScrollView>
@@ -450,118 +466,60 @@ const MotorInsuranceScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontSize: 24,
+  container: { flex: 1, backgroundColor: '#fff' },
+  content: { padding: 20, paddingBottom: 40 },
+  icon: { fontSize: 48, textAlign: 'center', marginVertical: 16 },
+  pageTitle: {
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   addButton: {
-    backgroundColor: '#139DA4',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  uploadFormCard: {
-    backgroundColor: '#fff',
-    margin: 16,
+    backgroundColor: '#4DB6AC',
     padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  addButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  loader: { marginTop: 40 },
+  section: { marginBottom: 32 },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  policyCard: {
+    backgroundColor: '#fff',
     borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  input: {
-    backgroundColor: '#f9f9f9',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  filePickerButton: {
-    backgroundColor: '#f9f9f9',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  filePickerText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  submitButton: {
-    backgroundColor: '#139DA4',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  section: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4DB6AC',
   },
   unprocessedCard: {
-    backgroundColor: '#fff',
-    padding: 16,
+    backgroundColor: '#FFF9E6',
     borderRadius: 12,
+    padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFA726',
+  },
+  expiredCard: {
+    borderLeftColor: '#FF6B6B',
+    opacity: 0.7,
   },
   policyHeader: {
     flexDirection: 'row',
@@ -570,112 +528,125 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   policyName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#000',
     flex: 1,
   },
   processingBadge: {
     flexDirection: 'row',
+    backgroundColor: '#FFA726',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
     alignItems: 'center',
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
   },
-  processingText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
+  processingText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   failedBadge: {
-    backgroundColor: '#f44336',
+    backgroundColor: '#FF6B6B',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
-  failedText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
+  failedText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  expiredBadge: {
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
-  uploadDate: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 12,
-  },
+  expiredText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  uploadDate: { fontSize: 14, color: '#666', marginBottom: 12 },
   verifyButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
+    backgroundColor: '#4DB6AC',
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
-  },
-  verifyButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  errorText: {
-    color: '#f44336',
-    fontSize: 12,
     marginTop: 8,
   },
-  policyCard: {
+  verifyButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  statusText: {
+    fontSize: 13,
+    color: '#FFA726',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#FF6B6B',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  policyNumber: { fontSize: 14, color: '#666', marginBottom: 4 },
+  insurer: { fontSize: 14, color: '#666', marginBottom: 12 },
+  policyDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  detailItem: { flex: 1 },
+  detailLabel: { fontSize: 12, color: '#999', marginBottom: 4 },
+  detailValue: { fontSize: 16, fontWeight: '600', color: '#000' },
+  endDate: { fontSize: 12, color: '#4DB6AC', marginTop: 8 },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 60,
+    paddingHorizontal: 40,
+  },
+  emptyIcon: { fontSize: 64, marginBottom: 16 },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  emptySubtext: { fontSize: 14, color: '#666', textAlign: 'center' },
+  backButton: {
+    marginBottom: 16,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#4DB6AC',
+    fontWeight: '600',
+  },
+  form: {
     backgroundColor: '#fff',
-    padding: 16,
     borderRadius: 12,
-    marginBottom: 12,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
-  policyCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  policyType: {
-    fontSize: 12,
-    color: '#139DA4',
-    fontWeight: '500',
-  },
-  policyDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  policyLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  policyValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-  },
-  expiredText: {
-    color: '#f44336',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyStateText: {
+  label: { fontSize: 16, color: '#333', marginBottom: 8, fontWeight: '500' },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#666',
-    marginBottom: 8,
+    marginBottom: 20,
+    color: '#000',
   },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: '#999',
+  filePicker: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 24,
+    backgroundColor: '#f5f5f5',
   },
+  fileSelected: { borderColor: '#4DB6AC', backgroundColor: '#E8F6F5' },
+  filePickerText: { color: '#666', fontSize: 16, textAlign: 'center' },
+  button: {
+    backgroundColor: '#4DB6AC',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonDisabled: { backgroundColor: '#A5D1CB' },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 
 export default MotorInsuranceScreen;

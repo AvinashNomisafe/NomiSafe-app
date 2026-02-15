@@ -52,6 +52,20 @@ const PolicyVerificationScreen: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // Motor-specific fields
+  const [vehicleRegNo, setVehicleRegNo] = useState(
+    extractedData.motor_details?.registration_number || '',
+  );
+  const [vehicleMake, setVehicleMake] = useState(
+    extractedData.motor_details?.vehicle_make || '',
+  );
+  const [idv, setIdv] = useState(
+    extractedData.motor_details?.idv?.toString() || '',
+  );
+  const [ncbPercentage, setNcbPercentage] = useState(
+    extractedData.motor_details?.ncb_percentage?.toString() || '',
+  );
+
   const handleVerify = async () => {
     // Validate required fields
     if (!policyNumber.trim()) {
@@ -84,8 +98,11 @@ const PolicyVerificationScreen: React.FC = () => {
         },
       };
 
-      // Update nominees if provided
-      if (nomineeName.trim()) {
+      // Update nominees if provided (only for LIFE and HEALTH)
+      if (
+        (insuranceType === 'LIFE' || insuranceType === 'HEALTH') &&
+        nomineeName.trim()
+      ) {
         verifiedData.nominees = [
           {
             name: nomineeName,
@@ -94,6 +111,17 @@ const PolicyVerificationScreen: React.FC = () => {
               extractedData.nominees?.[0]?.allocation_percentage || 100,
           },
         ];
+      }
+
+      // Update motor details if provided (only for MOTOR)
+      if (insuranceType === 'MOTOR') {
+        verifiedData.motor_details = {
+          ...extractedData.motor_details,
+          registration_number: vehicleRegNo,
+          vehicle_make: vehicleMake,
+          idv: idv ? Number(idv) : null,
+          ncb_percentage: ncbPercentage ? Number(ncbPercentage) : null,
+        };
       }
 
       // Call verify API
@@ -131,6 +159,7 @@ const PolicyVerificationScreen: React.FC = () => {
   const formatInsuranceType = (type: string) => {
     if (type === 'LIFE') return 'Life Insurance';
     if (type === 'HEALTH') return 'Health Insurance';
+    if (type === 'MOTOR') return 'Motor Insurance';
     return type;
   };
 
@@ -198,29 +227,93 @@ const PolicyVerificationScreen: React.FC = () => {
 
             <View style={styles.divider} />
 
-            <Text style={styles.sectionTitle}>Nominee Details</Text>
+            {/* Nominee Details - Only for Life and Health Insurance */}
+            {(insuranceType === 'LIFE' || insuranceType === 'HEALTH') && (
+              <>
+                <Text style={styles.sectionTitle}>Nominee Details</Text>
 
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Nominee Name</Text>
-              <TextInput
-                style={styles.input}
-                value={nomineeName}
-                onChangeText={setNomineeName}
-                placeholder="Enter nominee name"
-                placeholderTextColor="#999"
-              />
-            </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Nominee Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={nomineeName}
+                    onChangeText={setNomineeName}
+                    placeholder="Enter nominee name"
+                    placeholderTextColor="#999"
+                  />
+                </View>
 
-            <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Relationship</Text>
-              <TextInput
-                style={styles.input}
-                value={nomineeRelationship}
-                onChangeText={setNomineeRelationship}
-                placeholder="e.g., Spouse, Son, Daughter"
-                placeholderTextColor="#999"
-              />
-            </View>
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Relationship</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={nomineeRelationship}
+                    onChangeText={setNomineeRelationship}
+                    placeholder="e.g., Spouse, Son, Daughter"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                <View style={styles.divider} />
+              </>
+            )}
+
+            {/* Motor Details - Only for Motor Insurance */}
+            {insuranceType === 'MOTOR' && (
+              <>
+                <Text style={styles.sectionTitle}>Vehicle Details</Text>
+
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Registration Number</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={vehicleRegNo}
+                    onChangeText={setVehicleRegNo}
+                    placeholder="e.g., MH12AB1234"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>Vehicle Make</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={vehicleMake}
+                    onChangeText={setVehicleMake}
+                    placeholder="e.g., Maruti Suzuki, Honda"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>
+                    IDV - Insured Declared Value (₹)
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={idv}
+                    onChangeText={setIdv}
+                    placeholder="Enter vehicle IDV"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.label}>NCB - No Claim Bonus (%)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={ncbPercentage}
+                    onChangeText={setNcbPercentage}
+                    placeholder="e.g., 20, 50"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.divider} />
+              </>
+            )}
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity
