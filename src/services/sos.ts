@@ -21,14 +21,19 @@ export interface SOSAlertResponse {
  * Send SOS alert to all FirstConnect contacts
  * This will send SMS with user's location to emergency contacts
  */
-export const sendSOSAlert = async (data: SOSAlertRequest): Promise<SOSAlertResponse> => {
+export const sendSOSAlert = async (
+  data: SOSAlertRequest,
+): Promise<SOSAlertResponse> => {
   try {
     console.log('[SOS] Sending SOS alert with location:', data);
     const response = await authApi.post<SOSAlertResponse>('/sos/', data);
     console.log('[SOS] Alert sent successfully:', response.data);
     return response.data;
   } catch (error: any) {
-    console.error('[SOS] Failed to send alert:', error.response?.data || error.message);
+    console.error(
+      '[SOS] Failed to send alert:',
+      error.response?.data || error.message,
+    );
     throw error;
   }
 };

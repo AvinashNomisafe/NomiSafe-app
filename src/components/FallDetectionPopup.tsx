@@ -133,7 +133,10 @@ const FallDetectionPopup = forwardRef<
 
     // Listen for SOS sent
     const sentSub = DeviceEventEmitter.addListener('SOSSent', async event => {
-      console.log('[FallDetectionPopup] SOSSent event received:', JSON.stringify(event));
+      console.log(
+        '[FallDetectionPopup] SOSSent event received:',
+        JSON.stringify(event),
+      );
       Vibration.cancel();
       setStatus('sent');
 
