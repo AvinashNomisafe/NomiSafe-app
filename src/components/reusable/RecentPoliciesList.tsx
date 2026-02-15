@@ -44,13 +44,29 @@ const RecentPoliciesList: React.FC<RecentPoliciesListProps> = ({
   }
 
   const getPolicyIcon = (insuranceType: string) => {
-    return insuranceType === 'LIFE' ? 'heart-pulse' : 'medical-bag';
+    switch (insuranceType) {
+      case 'LIFE':
+        return 'heart-pulse';
+      case 'HEALTH':
+        return 'medical-bag';
+      case 'MOTOR':
+        return 'car';
+      default:
+        return 'shield-outline';
+    }
   };
 
   const getPolicyIconColor = (insuranceType: string) => {
-    return insuranceType === 'LIFE'
-      ? colors.insurance.life
-      : colors.insurance.health;
+    switch (insuranceType) {
+      case 'LIFE':
+        return colors.insurance.life;
+      case 'HEALTH':
+        return colors.insurance.health;
+      case 'MOTOR':
+        return '#FF9800'; // Orange for motor insurance
+      default:
+        return colors.primary.main;
+    }
   };
 
   return (

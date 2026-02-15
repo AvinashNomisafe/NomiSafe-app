@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import {
   colors,
@@ -14,6 +15,7 @@ import {
   typography,
   shadows,
 } from '../constants/theme';
+import { getVideoConfig, VideoConfig } from '../services/tutorial';
 
 interface VideoSectionProps {
   videoUrl?: string;
@@ -24,17 +26,54 @@ const DEFAULT_VIDEO_URL = 'https://www.youtube.com/watch?v=VIDEO_ID';
 const VideoSection: React.FC<VideoSectionProps> = ({
   videoUrl = DEFAULT_VIDEO_URL,
 }) => {
-  const handlePress = () => {
-    Linking.openURL(videoUrl).catch(() => undefined);
+  const [config, setConfig] = useState<VideoConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadVideoConfig();
+  }, []);
+
+  const loadVideoConfig = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getVideoConfig();
+      setConfig(data);
+    } catch (error) {
+      console.error('Failed to load video config:', error);
+      // Fallback to default if loading fails
+      setConfig({
+        title: 'How we secure your family future',
+        subtitle:
+          "Securely track assets, policies, and investments to protect your family's future.",
+        youtube_url: videoUrl,
+        updated_at: '',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handlePress = () => {
+    const url = config?.youtube_url || videoUrl;
+    Linking.openURL(url).catch(() => undefined);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="small" color={colors.background.main} />
+      </View>
+    );
+  }
+
+  if (!config) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>How we secure your family future</Text>
-      <Text style={styles.subtitle}>
-        Securely track assets, policies, and investments to protect your
-        family's future.
-      </Text>
+      <Text style={styles.title}>{config.title}</Text>
+      <Text style={styles.subtitle}>{config.subtitle}</Text>
 
       <TouchableOpacity
         style={styles.videoCard}

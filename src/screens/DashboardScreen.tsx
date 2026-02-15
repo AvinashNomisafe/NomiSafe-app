@@ -50,11 +50,11 @@ const DashboardScreen = () => {
   };
 
   const handleRenewalPress = (renewal: { id: number | string }) => {
-    navigation.navigate('MyPolicy', { policyId: renewal.id as number });
+    navigation.navigate('PolicyDetail', { policyId: renewal.id as number });
   };
 
   const handlePolicyPress = (policy: { id: number | string }) => {
-    navigation.navigate('MyPolicy', { policyId: policy.id as number });
+    navigation.navigate('PolicyDetail', { policyId: policy.id as number });
   };
 
   if (isLoadingDashboard) {

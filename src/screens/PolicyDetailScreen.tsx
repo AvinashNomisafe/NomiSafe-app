@@ -104,12 +104,18 @@ const PolicyDetailScreen: React.FC = () => {
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.icon}>
-              {policy.insurance_type === 'HEALTH' ? '🏥' : '🛡️'}
+              {policy.insurance_type === 'HEALTH'
+                ? '🏥'
+                : policy.insurance_type === 'MOTOR'
+                ? '🚗'
+                : '🛡️'}
             </Text>
             <Text style={styles.title}>{policy.name}</Text>
             <Text style={styles.subtitle}>
               {policy.insurance_type === 'HEALTH'
                 ? 'Health Insurance'
+                : policy.insurance_type === 'MOTOR'
+                ? 'Motor Insurance'
                 : 'Life Insurance'}
             </Text>
           </View>
@@ -215,6 +221,121 @@ const PolicyDetailScreen: React.FC = () => {
                   </View>
                 </View>
               ))}
+            </View>
+          )}
+
+          {/* Motor Details */}
+          {policy.motor_details && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Motor Insurance Details</Text>
+              <View style={styles.table}>
+                {policy.motor_details.vehicle_type && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Vehicle Type</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.vehicle_type}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.vehicle_make && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Make</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.vehicle_make}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.vehicle_model && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Model</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.vehicle_model}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.registration_number && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Registration No.</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.registration_number}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.year_of_manufacture && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Year</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.year_of_manufacture}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.idv && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>IDV</Text>
+                    <Text style={styles.value}>
+                      {formatCurrency(policy.motor_details.idv)}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.policy_type && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Policy Type</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.policy_type}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.ncb_percentage !== null && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>NCB</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.ncb_percentage}%
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.row}>
+                  <Text style={styles.label}>Own Damage Cover</Text>
+                  <Text style={styles.value}>
+                    {policy.motor_details.own_damage_cover ? 'Yes' : 'No'}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Third Party Cover</Text>
+                  <Text style={styles.value}>
+                    {policy.motor_details.third_party_cover ? 'Yes' : 'No'}
+                  </Text>
+                </View>
+                {policy.motor_details.has_zero_depreciation !== null && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Zero Depreciation</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.has_zero_depreciation
+                        ? 'Yes'
+                        : 'No'}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.has_engine_protection !== null && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Engine Protection</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.has_engine_protection
+                        ? 'Yes'
+                        : 'No'}
+                    </Text>
+                  </View>
+                )}
+                {policy.motor_details.has_roadside_assistance !== null && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Roadside Assistance</Text>
+                    <Text style={styles.value}>
+                      {policy.motor_details.has_roadside_assistance
+                        ? 'Yes'
+                        : 'No'}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           )}
 
