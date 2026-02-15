@@ -15,7 +15,7 @@ import { Platform } from 'react-native';
 // CHANGE THIS TO SWITCH ENVIRONMENTS
 // ============================================
 export type DeviceType = 'EMULATOR' | 'PHYSICAL_DEVICE' | 'PRODUCTION';
-export const DEVICE_TYPE: DeviceType = 'PHYSICAL_DEVICE'; // <-- CHANGE THIS
+export const DEVICE_TYPE: DeviceType = 'PRODUCTION'; // <-- CHANGE THIS
 
 // Update this with your Mac's local IP when using physical device
 // Find it with: ipconfig getifaddr en0 (Mac) or ipconfig (Windows)

@@ -640,10 +640,8 @@ public class FallDetectionService extends Service implements SensorEventListener
                 return;
             }
             
-            // Get API base URL - match the React Native config
-            // PHYSICAL_DEVICE uses local network IP, PRODUCTION uses AWS EC2
-            String apiBaseUrl = "http://192.168.1.19:8000/api";  // Local dev (match MAC_IP in api.ts)
-            // For production, use: "http://15.207.247.24/api"
+            // Get API base URL - match the React Native production config
+            String apiBaseUrl = "http://15.207.247.24/api";
             String sosEndpoint = apiBaseUrl + "/sos/";
             
             Log.i(TAG, "Sending SOS to backend: " + sosEndpoint + " (retries left: " + retriesLeft + ")");
