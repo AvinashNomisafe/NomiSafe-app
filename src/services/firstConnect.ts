@@ -28,7 +28,9 @@ export interface FirstConnectDeleteResponse {
 }
 
 export const getFirstConnects = async (): Promise<FirstConnectListResponse> => {
-  const response = await authApi.get<FirstConnectListResponse>('/first-connects/');
+  const response = await authApi.get<FirstConnectListResponse>(
+    '/first-connects/',
+  );
   return response.data;
 };
 
