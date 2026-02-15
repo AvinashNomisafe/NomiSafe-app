@@ -10,6 +10,7 @@ export type RootStackParamList = {
   LifeInsurance: undefined;
   HealthInsurance: undefined;
   MotorInsurance: undefined;
+  AllPolicies: undefined;
   PolicyVerification: {
     policyId: number;
     extractedData: ExtractedPolicyData;

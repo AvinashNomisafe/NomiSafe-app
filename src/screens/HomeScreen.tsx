@@ -34,7 +34,7 @@ const MENU_ITEMS = [
     id: 1,
     title: 'My Policy',
     icon: require('../assets/icons/myPolicyIcon.png'),
-    route: 'LifeInsurance',
+    route: 'AllPolicies',
   },
   {
     id: 2,

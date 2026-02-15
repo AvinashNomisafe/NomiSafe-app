@@ -73,9 +73,22 @@ const PolicyVerificationScreen: React.FC = () => {
       return;
     }
 
-    if (!sumAssured.trim() || isNaN(Number(sumAssured))) {
-      Alert.alert('Error', 'Please enter a valid sum assured amount');
-      return;
+    // Validate coverage amount based on insurance type
+    if (insuranceType === 'MOTOR') {
+      // For motor insurance, validate IDV instead of sum assured
+      if (!idv.trim() || isNaN(Number(idv))) {
+        Alert.alert(
+          'Error',
+          'Please enter a valid IDV (Insured Declared Value)',
+        );
+        return;
+      }
+    } else {
+      // For Life and Health, validate sum assured
+      if (!sumAssured.trim() || isNaN(Number(sumAssured))) {
+        Alert.alert('Error', 'Please enter a valid sum assured amount');
+        return;
+      }
     }
 
     if (!premiumAmount.trim() || isNaN(Number(premiumAmount))) {
@@ -93,7 +106,8 @@ const PolicyVerificationScreen: React.FC = () => {
         policy_number: policyNumber,
         coverage: {
           ...extractedData.coverage,
-          sum_assured: Number(sumAssured),
+          sum_assured:
+            insuranceType === 'MOTOR' ? Number(idv) : Number(sumAssured),
           premium_amount: Number(premiumAmount),
         },
       };
@@ -199,13 +213,22 @@ const PolicyVerificationScreen: React.FC = () => {
 
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>
-                Sum Assured (₹) <Text style={styles.required}>*</Text>
+                {insuranceType === 'MOTOR'
+                  ? 'IDV - Insured Declared Value (₹)'
+                  : 'Sum Assured (₹)'}{' '}
+                <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={styles.input}
-                value={sumAssured}
-                onChangeText={setSumAssured}
-                placeholder="Enter sum assured"
+                value={insuranceType === 'MOTOR' ? idv : sumAssured}
+                onChangeText={
+                  insuranceType === 'MOTOR' ? setIdv : setSumAssured
+                }
+                placeholder={
+                  insuranceType === 'MOTOR'
+                    ? 'Enter vehicle IDV'
+                    : 'Enter sum assured'
+                }
                 placeholderTextColor="#999"
                 keyboardType="numeric"
               />
@@ -282,20 +305,6 @@ const PolicyVerificationScreen: React.FC = () => {
                     onChangeText={setVehicleMake}
                     placeholder="e.g., Maruti Suzuki, Honda"
                     placeholderTextColor="#999"
-                  />
-                </View>
-
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>
-                    IDV - Insured Declared Value (₹)
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    value={idv}
-                    onChangeText={setIdv}
-                    placeholder="Enter vehicle IDV"
-                    placeholderTextColor="#999"
-                    keyboardType="numeric"
                   />
                 </View>
 
@@ -450,7 +459,7 @@ const styles = StyleSheet.create({
   },
   verifyButton: {
     flex: 1,
-    backgroundColor: '#4DB6AC',
+    backgroundColor: '#139DA4',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

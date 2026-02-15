@@ -369,13 +369,6 @@ const InsuranceScreen: React.FC = () => {
         <AppHeader />
         <ScrollView style={styles.container}>
           <View style={styles.content}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setShowUploadForm(false)}
-            >
-              <Text style={styles.backButtonText}>← Back to Policies</Text>
-            </TouchableOpacity>
-
             <Text style={styles.icon}>🏥</Text>
             <Text style={styles.pageTitle}>Upload Policy</Text>
 
@@ -575,7 +568,7 @@ const styles = StyleSheet.create({
   expiredText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   uploadDate: { fontSize: 14, color: '#666', marginBottom: 12 },
   verifyButton: {
-    backgroundColor: '#4DB6AC',
+    backgroundColor: '#139DA4',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',

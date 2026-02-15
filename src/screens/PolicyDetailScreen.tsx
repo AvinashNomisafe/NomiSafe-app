@@ -42,6 +42,17 @@ const PolicyDetailScreen: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await getPolicyDetail(policyId);
+      console.log('=== Policy Detail API Response ===');
+      console.log('Full Response:', JSON.stringify(data, null, 2));
+      console.log('Policy ID:', data.id);
+      console.log('Insurance Type:', data.insurance_type);
+      console.log('Policy Name:', data.name);
+      console.log('Coverage:', data.coverage);
+      console.log('Nominees:', data.nominees);
+      console.log('Benefits:', data.benefits);
+      console.log('Exclusions:', data.exclusions);
+      console.log('Health Details:', data.health_details);
+      console.log('====================================');
       setPolicy(data);
     } catch (error) {
       console.error('Failed to load policy detail:', error);

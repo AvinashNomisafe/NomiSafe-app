@@ -27,6 +27,7 @@ import MyPolicyScreen from './src/screens/MyPolicyScreen';
 import LifeInsuranceScreen from './src/screens/LifeInsuranceScreen';
 import HealthInsuranceScreen from './src/screens/HealthInsuranceScreen';
 import MotorInsuranceScreen from './src/screens/MotorInsuranceScreen';
+import AllPoliciesScreen from './src/screens/AllPoliciesScreen';
 import PolicyVerificationScreen from './src/screens/PolicyVerificationScreen';
 import PolicyDetailScreen from './src/screens/PolicyDetailScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
@@ -76,6 +77,7 @@ const Navigation = () => {
             name="MotorInsurance"
             component={MotorInsuranceScreen}
           />
+          <Stack.Screen name="AllPolicies" component={AllPoliciesScreen} />
           <Stack.Screen
             name="PolicyVerification"
             component={PolicyVerificationScreen}

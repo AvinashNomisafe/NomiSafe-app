@@ -101,6 +101,24 @@ export interface ExtractedPolicyData {
   exclusions?: any[];
   health_details?: any;
   covered_members?: any[];
+  motor_details?: {
+    vehicle_type?: string;
+    policy_type?: string;
+    vehicle_make?: string;
+    vehicle_model?: string;
+    registration_number?: string;
+    engine_number?: string;
+    chassis_number?: string;
+    year_of_manufacture?: number;
+    idv?: number | null;
+    own_damage_cover?: number | null;
+    third_party_cover?: number | null;
+    ncb_percentage?: number | null;
+    previous_policy_number?: string;
+    has_zero_depreciation?: boolean;
+    has_engine_protection?: boolean;
+    has_roadside_assistance?: boolean;
+  };
 }
 
 export interface PolicyUploadResponse {

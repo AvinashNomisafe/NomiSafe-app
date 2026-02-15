@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   addButton: {
-    backgroundColor: '#4DB6AC',
+    backgroundColor: '#139DA4',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   expiredText: { color: '#fff', fontSize: 12, fontWeight: '600' },
   uploadDate: { fontSize: 14, color: '#666', marginBottom: 12 },
   verifyButton: {
-    backgroundColor: '#4DB6AC',
+    backgroundColor: '#139DA4',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   fileSelected: { borderColor: '#4DB6AC', backgroundColor: '#E8F6F5' },
   filePickerText: { color: '#666', fontSize: 16, textAlign: 'center' },
   button: {
-    backgroundColor: '#4DB6AC',
+    backgroundColor: '#139DA4',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

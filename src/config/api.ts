@@ -15,11 +15,11 @@ import { Platform } from 'react-native';
 // CHANGE THIS TO SWITCH ENVIRONMENTS
 // ============================================
 export type DeviceType = 'EMULATOR' | 'PHYSICAL_DEVICE' | 'PRODUCTION';
-export const DEVICE_TYPE: DeviceType = 'PRODUCTION'; // <-- CHANGE THIS
+export const DEVICE_TYPE: DeviceType = 'PHYSICAL_DEVICE'; // <-- CHANGE THIS
 
 // Update this with your Mac's local IP when using physical device
 // Find it with: ipconfig getifaddr en0 (Mac) or ipconfig (Windows)
-export const MAC_IP = '192.168.1.102';
+export const MAC_IP = '192.168.1.19';
 // ============================================
 
 const getBaseURL = (): string => {
