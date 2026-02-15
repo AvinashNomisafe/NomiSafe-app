@@ -44,6 +44,7 @@ const DEFAULT_ITEMS: DocumentItem[] = [
     id: 4,
     title: 'Properties',
     icon: require('../assets/icons/propertiesIconNew.png'),
+    route: 'Properties',
   },
   {
     id: 5,
