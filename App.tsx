@@ -28,6 +28,7 @@ import LifeInsuranceScreen from './src/screens/LifeInsuranceScreen';
 import HealthInsuranceScreen from './src/screens/HealthInsuranceScreen';
 import MotorInsuranceScreen from './src/screens/MotorInsuranceScreen';
 import AllPoliciesScreen from './src/screens/AllPoliciesScreen';
+import NomineeDetailsScreen from './src/screens/NomineeDetailsScreen';
 import PolicyVerificationScreen from './src/screens/PolicyVerificationScreen';
 import PolicyDetailScreen from './src/screens/PolicyDetailScreen';
 import PropertiesScreen from './src/screens/PropertiesScreen';
@@ -87,6 +88,10 @@ const Navigation = () => {
           <Stack.Screen name="Tutorials" component={TutorialsScreen} />
           <Stack.Screen name="Service" component={ServiceScreen} />
           <Stack.Screen name="SafeVault" component={SafeVaultScreen} />
+          <Stack.Screen
+            name="NomineeDetails"
+            component={NomineeDetailsScreen}
+          />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen
             name="AadhaarVerification"

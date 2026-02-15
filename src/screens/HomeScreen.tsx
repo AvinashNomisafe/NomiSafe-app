@@ -40,7 +40,7 @@ const MENU_ITEMS = [
     id: 2,
     title: 'Nominees',
     icon: require('../assets/icons/nomineesIcon.png'),
-    route: 'HealthInsurance',
+    route: 'SafeVault',
   },
   {
     id: 3,

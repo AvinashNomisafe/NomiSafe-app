@@ -20,6 +20,7 @@ export type RootStackParamList = {
   Tutorials: undefined;
   Service: undefined;
   SafeVault: undefined;
+  NomineeDetails: undefined;
   Profile: undefined;
   AadhaarVerification: undefined;
   Dashboard: undefined;
